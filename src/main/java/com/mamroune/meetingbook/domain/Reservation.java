@@ -1,14 +1,35 @@
 package com.mamroune.meetingbook.domain;
 
 import java.time.LocalDateTime;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 
+@Entity
+@Table(name = "reservations")
 public class Reservation {
-
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @ManyToOne
+    @JoinColumn(name = "meeting_room_id", nullable = false)
     private MeetingRoom meetingRoom;
+    @Column(name = "start_at", nullable = false)
     private LocalDateTime startAt;
+    @Column(name = "end_at", nullable = false)
     private LocalDateTime endAt;
+    @Enumerated(EnumType.STRING)
     private ReservationStatus status;
+
+    protected Reservation() {
+    }
 
     public Reservation(MeetingRoom meetingRoom, LocalDateTime startAt, LocalDateTime endAt) {
         this.meetingRoom = meetingRoom;
@@ -34,6 +55,6 @@ public class Reservation {
     }
 
     public ReservationStatus getStatus() {
-    return status;
-}
+        return status;
+    }
 }
