@@ -57,4 +57,7 @@ public class Reservation {
     public ReservationStatus getStatus() {
         return status;
     }
+    public void cancel() {
+    this.status = ReservationStatus.CANCELLED;
+}
 }
