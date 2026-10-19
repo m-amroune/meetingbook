@@ -17,6 +17,9 @@ import com.mamroune.meetingbook.exception.MeetingRoomNotFoundException;
 import com.mamroune.meetingbook.exception.ReservationNotFoundException;
 import com.mamroune.meetingbook.exception.InvalidReservationPeriodException;
 
+import com.mamroune.meetingbook.domain.ReservationStatus;
+import com.mamroune.meetingbook.exception.ReservationConflictException;
+
 @Service
 public class ReservationService {
 
@@ -53,6 +56,17 @@ public class ReservationService {
                 }
                 MeetingRoom meetingRoom = meetingRoomRepository.findById(request.getMeetingRoomId())
                                 .orElseThrow(() -> new MeetingRoomNotFoundException(request.getMeetingRoomId()));
+
+                boolean hasConflict = reservationRepository
+                                .existsByMeetingRoom_IdAndStatusAndStartAtLessThanAndEndAtGreaterThan(
+                                                request.getMeetingRoomId(),
+                                                ReservationStatus.ACTIVE,
+                                                request.getEndAt(),
+                                                request.getStartAt());
+
+                if (hasConflict) {
+                        throw new ReservationConflictException();
+                }
 
                 Reservation reservation = new Reservation(
                                 meetingRoom,

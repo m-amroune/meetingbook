@@ -30,6 +30,8 @@ import com.mamroune.meetingbook.exception.InvalidReservationPeriodException;
 import com.mamroune.meetingbook.exception.MeetingRoomNotFoundException;
 import com.mamroune.meetingbook.domain.ReservationStatus;
 
+import com.mamroune.meetingbook.exception.ReservationConflictException;
+
 @ExtendWith(MockitoExtension.class)
 
 class ReservationServiceTest {
@@ -227,4 +229,74 @@ class ReservationServiceTest {
         verifyNoMoreInteractions(reservationRepository);
         verifyNoInteractions(meetingRoomRepository, reservationMapper);
     }
+    @Test
+void createReservationThrowsWhenTimeSlotOverlaps() {
+    Long roomId = 1L;
+    LocalDateTime startAt = LocalDateTime.now().plusDays(1);
+    LocalDateTime endAt = startAt.plusHours(1);
+
+    ReservationRequest request = new ReservationRequest();
+    request.setMeetingRoomId(roomId);
+    request.setStartAt(startAt);
+    request.setEndAt(endAt);
+
+    MeetingRoom meetingRoom = mock(MeetingRoom.class);
+
+    when(meetingRoomRepository.findById(roomId))
+            .thenReturn(Optional.of(meetingRoom));
+
+    when(reservationRepository
+            .existsByMeetingRoom_IdAndStatusAndStartAtLessThanAndEndAtGreaterThan(
+                    roomId, ReservationStatus.ACTIVE, endAt, startAt
+            ))
+            .thenReturn(true);
+
+    assertThrows(
+            ReservationConflictException.class,
+            () -> reservationService.createReservation(request)
+    );
+
+    verify(reservationRepository, never()).save(any(Reservation.class));
+    verifyNoInteractions(reservationMapper);
+}
+@Test
+void createReservationChecksOnlyActiveReservations() {
+    Long roomId = 1L;
+    LocalDateTime startAt = LocalDateTime.now().plusDays(1);
+    LocalDateTime endAt = startAt.plusHours(1);
+
+    ReservationRequest request = new ReservationRequest();
+    request.setMeetingRoomId(roomId);
+    request.setStartAt(startAt);
+    request.setEndAt(endAt);
+
+    MeetingRoom meetingRoom = mock(MeetingRoom.class);
+    ReservationResponse response = new ReservationResponse();
+
+    when(meetingRoomRepository.findById(roomId))
+            .thenReturn(Optional.of(meetingRoom));
+
+    when(reservationRepository
+            .existsByMeetingRoom_IdAndStatusAndStartAtLessThanAndEndAtGreaterThan(
+                    roomId, ReservationStatus.ACTIVE, endAt, startAt
+            ))
+            .thenReturn(false);
+
+    when(reservationRepository.save(any(Reservation.class)))
+            .thenAnswer(invocation -> invocation.getArgument(0));
+
+    when(reservationMapper.toResponse(any(Reservation.class)))
+            .thenReturn(response);
+
+    ReservationResponse result = reservationService.createReservation(request);
+
+    assertSame(response, result);
+
+    verify(reservationRepository)
+            .existsByMeetingRoom_IdAndStatusAndStartAtLessThanAndEndAtGreaterThan(
+                    roomId, ReservationStatus.ACTIVE, endAt, startAt
+            );
+
+    verify(reservationRepository).save(any(Reservation.class));
+}
 }

@@ -29,8 +29,11 @@ public class MeetingRoom {
     @Enumerated(EnumType.STRING)
     private MeetingRoomStatus status;
 
-    protected MeetingRoom() {
-    }
+   /**
+ * Required by JPA to instantiate the entity.
+ */
+protected MeetingRoom() {
+}
 
     public MeetingRoom(String name, String location, int capacity, Set<String> equipment) {
         this.name = name;
