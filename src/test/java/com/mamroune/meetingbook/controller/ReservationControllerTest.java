@@ -181,4 +181,25 @@ class ReservationControllerTest {
                                 .content(requestBody))
                                 .andExpect(status().isConflict());
         }
+
+        @Test
+        void createReservationReturnsBadRequestWhenDatesAreInThePast() throws Exception {
+                LocalDateTime startAt = LocalDateTime.now().minusDays(1).withNano(0);
+                LocalDateTime endAt = startAt.plusHours(1);
+
+                String requestBody = """
+                                {
+                                    "meetingRoomId": 1,
+                                    "startAt": "%s",
+                                    "endAt": "%s"
+                                }
+                                """.formatted(startAt, endAt);
+
+                mockMvc.perform(post("/api/reservations")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody))
+                                .andExpect(status().isBadRequest());
+
+                verifyNoInteractions(reservationService);
+        }
 }
