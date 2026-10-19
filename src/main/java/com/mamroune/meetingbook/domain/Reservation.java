@@ -28,8 +28,11 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
-    protected Reservation() {
-    }
+  /**
+ * Required by JPA to instantiate the entity.
+ */
+protected Reservation() {
+}
 
     public Reservation(MeetingRoom meetingRoom, LocalDateTime startAt, LocalDateTime endAt) {
         this.meetingRoom = meetingRoom;
@@ -57,7 +60,11 @@ public class Reservation {
     public ReservationStatus getStatus() {
         return status;
     }
-    public void cancel() {
+
+   /**
+ * Marks the reservation as cancelled without deleting its record.
+ */
+public void cancel() {
     this.status = ReservationStatus.CANCELLED;
 }
 }

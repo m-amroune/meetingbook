@@ -15,5 +15,11 @@ public interface MeetingRoomMapper {
 
     MeetingRoomResponse toResponse(MeetingRoom meetingRoom);
 
-    void updateEntity(MeetingRoomRequest request, @MappingTarget MeetingRoom meetingRoom);
+    /**
+ * Updates an existing meeting room entity from the request data.
+ *
+ * @param request the data to apply
+ * @param meetingRoom the existing entity to update
+ */
+void updateEntity(MeetingRoomRequest request, @MappingTarget MeetingRoom meetingRoom);
 }
