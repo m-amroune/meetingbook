@@ -1,0 +1,76 @@
+<section class="reservation-page">
+  <h2>Nouvelle réservation</h2>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <div class="form-field">
+      <label for="meetingRoomId">Salle</label>
+
+      <select id="meetingRoomId" formControlName="meetingRoomId">
+        <option [ngValue]="0">Sélectionner une salle</option>
+
+        @for (room of rooms(); track room.id) {
+          <option [ngValue]="room.id" [disabled]="room.status === 'OUT_OF_SERVICE'">
+            {{ room.name }}
+            @if (room.status === 'OUT_OF_SERVICE') {
+              (Hors service)
+            }
+          </option>
+        }
+      </select>
+
+      @if (roomsLoading()) {
+        <p role="status">Chargement des salles...</p>
+      } @else if (roomsError()) {
+        <p role="alert">Impossible de charger les salles.</p>
+      } @else if (rooms().length === 0) {
+        <p>Aucune salle disponible.</p>
+      }
+    </div>
+
+    <div class="form-field">
+      <label for="startAt">Début</label>
+      <input id="startAt" type="datetime-local" formControlName="startAt" />
+    </div>
+
+    <div class="form-field">
+      <label for="endAt">Fin</label>
+      <input id="endAt" type="datetime-local" formControlName="endAt" />
+    </div>
+
+    @if (form.controls.meetingRoomId.invalid && form.controls.meetingRoomId.touched) {
+      <p role="alert">Sélectionnez une salle.</p>
+    }
+
+    @if (form.controls.startAt.invalid && form.controls.startAt.touched) {
+      <p role="alert">Indiquez une date et une heure de début.</p>
+    }
+
+    @if (form.controls.endAt.invalid && form.controls.endAt.touched) {
+      <p role="alert">Indiquez une date et une heure de fin.</p>
+    }
+
+    @if (form.hasError('dateNotFuture')) {
+      <p role="alert">La réservation doit être dans le futur.</p>
+    }
+
+    @if (form.hasError('invalidPeriod')) {
+      <p role="alert">L'heure de fin doit être postérieure à l'heure de début.</p>
+    }
+
+    @if (form.hasError('invalidDates')) {
+      <p role="alert">Les dates indiquées sont invalides.</p>
+    }
+    <button type="submit" [disabled]="submitting() || roomsLoading() || roomsError()">
+      {{ submitting() ? 'Enregistrement...' : 'Confirmer la réservation' }}
+    </button>
+  </form>
+  @if (submissionSuccess()) {
+    <p role="status">Réservation enregistrée avec succès.</p>
+  }
+
+  @if (submissionError(); as message) {
+    <p role="alert">
+      {{ message }}
+    </p>
+  }
+</section>

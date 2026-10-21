@@ -1,8 +1,5 @@
-
 <section class="room-detail">
-  <a class="back-link" routerLink="/salles">
-  ← Retour aux salles
-</a>
+  <a class="back-link" routerLink="/salles"> ← Retour aux salles </a>
   @if (loading()) {
     <p role="status">Chargement de la salle...</p>
   } @else if (error()) {
@@ -11,9 +8,7 @@
     <header>
       <h2>{{ selectedRoom.name }}</h2>
       <p>
-        {{ selectedRoom.status === 'ACTIVE'
-          ? 'En service'
-          : 'Hors service' }}
+        {{ selectedRoom.status === 'ACTIVE' ? 'En service' : 'Hors service' }}
       </p>
     </header>
 
@@ -35,6 +30,15 @@
         <p>Aucun équipement renseigné.</p>
       }
     </div>
+
+    @if (selectedRoom.status === 'ACTIVE') {
+      <a
+        class="booking-link"
+        [routerLink]="['/reservations/nouvelle']"
+        [queryParams]="{ roomId: selectedRoom.id }"
+      >
+        Réserver cette salle
+      </a>
+    }
   }
 </section>
-
