@@ -1,0 +1,40 @@
+
+<section class="room-detail">
+  <a class="back-link" routerLink="/salles">
+  ← Retour aux salles
+</a>
+  @if (loading()) {
+    <p role="status">Chargement de la salle...</p>
+  } @else if (error()) {
+    <p role="alert">{{ error() }}</p>
+  } @else if (room(); as selectedRoom) {
+    <header>
+      <h2>{{ selectedRoom.name }}</h2>
+      <p>
+        {{ selectedRoom.status === 'ACTIVE'
+          ? 'En service'
+          : 'Hors service' }}
+      </p>
+    </header>
+
+    <div class="room-info">
+      <h3>Informations</h3>
+
+      <p>Localisation : {{ selectedRoom.location }}</p>
+      <p>Capacité : {{ selectedRoom.capacity }} personnes</p>
+
+      <h3>Équipements</h3>
+
+      @if (selectedRoom.equipment.length > 0) {
+        <ul>
+          @for (item of selectedRoom.equipment; track item) {
+            <li>{{ item }}</li>
+          }
+        </ul>
+      } @else {
+        <p>Aucun équipement renseigné.</p>
+      }
+    </div>
+  }
+</section>
+

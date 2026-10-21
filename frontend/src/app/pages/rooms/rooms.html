@@ -1,1 +1,37 @@
-<p>rooms works!</p>
+<section class="rooms-page">
+  <header>
+    <h2>Salles de réunion</h2>
+  </header>
+
+  @if (loading()) {
+    <p role="status">Chargement des salles...</p>
+  } @else if (error()) {
+    <p role="alert">{{ error() }}</p>
+  } @else if (rooms().length === 0) {
+    <p>Aucune salle à afficher.</p>
+  } @else {
+    <div class="rooms-grid">
+      @for (room of rooms(); track room.id) {
+        <article class="room-card">
+          <h3>
+            <a [routerLink]="['/salles', room.id]">
+              {{ room.name }}
+            </a>
+          </h3>
+
+          <p>{{ room.location }}</p>
+          <p>Capacité : {{ room.capacity }} personnes</p>
+
+          <p>
+            Statut :
+            {{ room.status === 'ACTIVE' ? 'En service' : 'Hors service' }}
+          </p>
+
+          @if (room.equipment.length > 0) {
+            <p>Équipements : {{ room.equipment.join(', ') }}</p>
+          }
+        </article>
+      }
+    </div>
+  }
+</section>
