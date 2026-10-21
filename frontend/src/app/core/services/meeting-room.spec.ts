@@ -1,13 +1,16 @@
 import { TestBed } from '@angular/core/testing';
-import { MeetingRoom } from './meeting-room';
+import { MeetingRoomService } from './meeting-room';
+import { provideHttpClient } from '@angular/common/http';
 
 describe('MeetingRoom', () => {
-  let service: MeetingRoom;
+ let service: MeetingRoomService;
 
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(MeetingRoom);
+ beforeEach(() => {
+  TestBed.configureTestingModule({
+    providers: [provideHttpClient()],
   });
+  service = TestBed.inject(MeetingRoomService);
+});
 
   it('should be created', () => {
     expect(service).toBeTruthy();
