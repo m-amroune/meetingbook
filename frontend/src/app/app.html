@@ -1,6 +1,29 @@
-<main>
-  <h1>MeetingBook</h1>
-  <p>Réservation de salles de réunion</p>
+<div class="app-shell">
+  <aside class="sidebar">
+    <a class="sidebar-brand" routerLink="/salles"> MeetingBook </a>
 
-  <router-outlet />
-</main>
+    <nav aria-label="Navigation principale">
+      <a
+        routerLink="/salles"
+        routerLinkActive="is-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        Salles
+      </a>
+
+      <a
+        routerLink="/reservations"
+        routerLinkActive="is-active"
+        [routerLinkActiveOptions]="{ exact: true }"
+      >
+        Réservations
+      </a>
+
+      <a routerLink="/reservations/nouvelle" routerLinkActive="is-active"> Nouvelle réservation </a>
+    </nav>
+  </aside>
+
+  <main class="site-main">
+    <router-outlet />
+  </main>
+</div>
