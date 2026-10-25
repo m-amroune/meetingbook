@@ -1,5 +1,6 @@
 <section class="room-detail">
   <a class="back-link" routerLink="/salles"> ← Retour aux salles </a>
+
   @if (loading()) {
     <p role="status">Chargement de la salle...</p>
   } @else if (error()) {
@@ -13,32 +14,57 @@
     </header>
 
     <div class="room-info">
-      <h3>Informations</h3>
+      <div class="room-info__media">
+        @if (selectedRoom.id === 2) {
+          <img
+            src="/images/simone-veil.png"
+            alt="Salle Simone Veil avec six chaises noires, un écran et un tableau blanc"
+          />
+        } @else if (selectedRoom.id === 3) {
+          <img
+            src="/images/marie-curie.png"
+            alt="Salle Marie Curie avec huit chaises noires, un écran et un tableau blanc"
+          />
+        } @else if (selectedRoom.id === 4) {
+          <img
+            src="/images/victor-hugo.png"
+            alt="Salle Victor Hugo avec dix places, écran, tableau blanc et visioconférence"
+          />
+        } @else if (selectedRoom.id === 5) {
+          <img
+            src="/images/josephine-baker.png"
+            alt="Salle Joséphine Baker avec écran, tableau blanc et visioconférence"
+          />
+        } @else {
+          <span>Image de la salle à venir</span>
+        }
+      </div>
 
-      <p>Localisation : {{ selectedRoom.location }}</p>
-      <p>Capacité : {{ selectedRoom.capacity }} personnes</p>
+      <div class="room-info__content">
+        <p class="room-info__summary">
+          {{ selectedRoom.location }} · {{ selectedRoom.capacity }} personnes
+        </p>
 
-      <h3>Équipements</h3>
+        <div class="room-info__equipment">
+          <h3>Équipements</h3>
 
-      @if (selectedRoom.equipment.length > 0) {
-        <ul>
-          @for (item of selectedRoom.equipment; track item) {
-            <li>{{ item }}</li>
+          @if (selectedRoom.equipment.length > 0) {
+            <p>{{ selectedRoom.equipment.join(' · ') }}</p>
+          } @else {
+            <p>Aucun équipement renseigné.</p>
           }
-        </ul>
-      } @else {
-        <p>Aucun équipement renseigné.</p>
-      }
-    </div>
+        </div>
 
-    @if (selectedRoom.status === 'ACTIVE') {
-      <a
-        class="booking-link"
-        [routerLink]="['/reservations/nouvelle']"
-        [queryParams]="{ roomId: selectedRoom.id }"
-      >
-        Réserver cette salle
-      </a>
-    }
+        @if (selectedRoom.status === 'ACTIVE') {
+          <a
+            class="booking-link"
+            [routerLink]="['/reservations/nouvelle']"
+            [queryParams]="{ roomId: selectedRoom.id }"
+          >
+            Réserver cette salle
+          </a>
+        }
+      </div>
+    </div>
   }
 </section>

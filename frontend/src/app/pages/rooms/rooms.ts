@@ -22,7 +22,7 @@ export class Rooms implements OnInit {
   ngOnInit(): void {
     this.meetingRoomService.getAll().subscribe({
       next: (rooms) => {
-        this.rooms.set(rooms);
+        this.rooms.set([...rooms].sort((a, b) => a.id - b.id));
         this.loading.set(false);
       },
       error: () => {
