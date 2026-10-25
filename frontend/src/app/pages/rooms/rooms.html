@@ -13,22 +13,42 @@
     <div class="rooms-grid">
       @for (room of rooms(); track room.id) {
         <article class="room-card">
-          <h3>
-            <a [routerLink]="['/salles', room.id]">
-              {{ room.name }}
-            </a>
-          </h3>
+          <div class="room-card__media">
+            @switch (room.id) {
+              @case (2) {
+                <img src="/images/simone-veil-thumb.png" alt="Salle Simone Veil" />
+              }
+              @case (3) {
+                <img src="/images/marie-curie-thumb.png" alt="Salle Marie Curie" />
+              }
+              @case (4) {
+                <img src="/images/victor-hugo-thumb.png" alt="Salle Victor Hugo" />
+              }
+              @case (5) {
+                <img src="/images/josephine-baker-thumb.png" alt="Salle Joséphine Baker" />
+              }
+            }
+          </div>
 
-          <p>{{ room.location }}</p>
-          <p>Capacité : {{ room.capacity }} personnes</p>
+          <div class="room-card__heading">
+            <h3>
+              <a [routerLink]="['/salles', room.id]">
+                {{ room.name }}
+              </a>
+            </h3>
 
-          <p>
-            Statut :
-            {{ room.status === 'ACTIVE' ? 'En service' : 'Hors service' }}
-          </p>
+            <p class="room-card__meta">{{ room.location }} · {{ room.capacity }} personnes</p>
+          </div>
 
           @if (room.equipment.length > 0) {
-            <p>Équipements : {{ room.equipment.join(', ') }}</p>
+            <div class="room-card__equipment">
+              <p class="room-card__label">Équipements</p>
+              <p>{{ room.equipment.join(' · ') }}</p>
+            </div>
+          }
+
+          @if (room.status === 'OUT_OF_SERVICE') {
+            <p class="room-card__unavailable">Hors service</p>
           }
         </article>
       }
