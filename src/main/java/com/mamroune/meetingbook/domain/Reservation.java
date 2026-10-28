@@ -11,6 +11,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 
 @Entity
 @Table(name = "reservations")
@@ -21,6 +22,9 @@ public class Reservation {
     @ManyToOne
     @JoinColumn(name = "meeting_room_id", nullable = false)
     private MeetingRoom meetingRoom;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "app_user_id")
+    private AppUser owner;
     @Column(name = "start_at", nullable = false)
     private LocalDateTime startAt;
     @Column(name = "end_at", nullable = false)
@@ -28,11 +32,11 @@ public class Reservation {
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
-  /**
- * Required by JPA to instantiate the entity.
- */
-protected Reservation() {
-}
+    /**
+     * Required by JPA to instantiate the entity.
+     */
+    protected Reservation() {
+    }
 
     public Reservation(MeetingRoom meetingRoom, LocalDateTime startAt, LocalDateTime endAt) {
         this.meetingRoom = meetingRoom;
@@ -40,6 +44,15 @@ protected Reservation() {
         this.endAt = endAt;
         this.status = ReservationStatus.ACTIVE;
     }
+    public Reservation(
+        MeetingRoom meetingRoom,
+        LocalDateTime startAt,
+        LocalDateTime endAt,
+        AppUser owner) {
+
+    this(meetingRoom, startAt, endAt);
+    this.owner = owner;
+}
 
     public Long getId() {
         return id;
@@ -61,10 +74,14 @@ protected Reservation() {
         return status;
     }
 
-   /**
- * Marks the reservation as cancelled without deleting its record.
- */
-public void cancel() {
-    this.status = ReservationStatus.CANCELLED;
-}
+    /**
+     * Marks the reservation as cancelled without deleting its record.
+     */
+    public void cancel() {
+        this.status = ReservationStatus.CANCELLED;
+    }
+
+    public AppUser getOwner() {
+        return owner;
+    }
 }

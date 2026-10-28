@@ -15,6 +15,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import org.springframework.mock.web.MockHttpSession;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -63,4 +64,22 @@ class SecurityConfigTest {
 
         assertTrue(session.isInvalid());
     }
+
+    @Test
+    void rejectsUnauthenticatedAccessToReservations() throws Exception {
+        mockMvc.perform(get("/api/reservations"))
+                .andExpect(status().isUnauthorized());
+    }
+    @Test
+void allowsAuthenticatedAccessToReservations() throws Exception {
+    mockMvc.perform(get("/api/reservations")
+            .with(user("test@example.com").roles("USER")))
+            .andExpect(status().isOk());
+}
+@Test
+void rejectsUnauthenticatedReservationCancellation() throws Exception {
+    mockMvc.perform(patch("/api/reservations/1/cancel")
+            .with(csrf()))
+            .andExpect(status().isUnauthorized());
+}
 }

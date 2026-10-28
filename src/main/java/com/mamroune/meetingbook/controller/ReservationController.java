@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import com.mamroune.meetingbook.dto.ReservationRequest;
 
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("/api/reservations")
@@ -31,28 +32,34 @@ public class ReservationController {
     private final ReservationService reservationService;
 
     public ReservationController(ReservationService reservationService) {
-    this.reservationService = reservationService;
-}
+        this.reservationService = reservationService;
+    }
 
-@GetMapping
-public List<ReservationResponse> getAllReservations() {
-    return reservationService.getAllReservations();
-}
+    @GetMapping
+    public List<ReservationResponse> getAllReservations(
+            Authentication authentication) {
+        return reservationService.getAllReservations(authentication.getName());
+    }
 
-@GetMapping("/{id}")
-public ReservationResponse getReservationById(@PathVariable Long id) {
-    return reservationService.getReservationById(id);
-}
+    @GetMapping("/{id}")
+    public ReservationResponse getReservationById(
+            @PathVariable Long id,
+            Authentication authentication) {
+        return reservationService.getReservationById(id, authentication.getName());
+    }
 
-@PostMapping
-@ResponseStatus(HttpStatus.CREATED)
-public ReservationResponse createReservation(
-        @Valid @RequestBody ReservationRequest request) {
-    return reservationService.createReservation(request);
-}
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public ReservationResponse createReservation(
+            @Valid @RequestBody ReservationRequest request,
+            Authentication authentication) {
+        return reservationService.createReservation(request, authentication.getName());
+    }
 
-@PatchMapping("/{id}/cancel")
-public ReservationResponse cancelReservation(@PathVariable Long id) {
-    return reservationService.cancelReservation(id);
-}
+    @PatchMapping("/{id}/cancel")
+    public ReservationResponse cancelReservation(
+            @PathVariable Long id,
+            Authentication authentication) {
+        return reservationService.cancelReservation(id, authentication.getName());
+    }
 }

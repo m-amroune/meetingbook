@@ -31,272 +31,291 @@ import com.mamroune.meetingbook.exception.MeetingRoomNotFoundException;
 import com.mamroune.meetingbook.domain.ReservationStatus;
 
 import com.mamroune.meetingbook.exception.ReservationConflictException;
+import com.mamroune.meetingbook.repository.AppUserRepository;
+import com.mamroune.meetingbook.domain.AppUser;
 
 @ExtendWith(MockitoExtension.class)
 
 class ReservationServiceTest {
 
-    @Mock
-    private ReservationRepository reservationRepository;
+        private static final String EMAIL = "test@example.com";
 
-    @Mock
-    private MeetingRoomRepository meetingRoomRepository;
+        @Mock
+        private ReservationRepository reservationRepository;
 
-    @Mock
-    private ReservationMapper reservationMapper;
+        @Mock
+        private MeetingRoomRepository meetingRoomRepository;
 
-    @InjectMocks
-    private ReservationService reservationService;
+        @Mock
+        private ReservationMapper reservationMapper;
 
-    @Test
-    void getAllReservationsReturnsMappedReservations() {
-        Reservation reservation = mock(Reservation.class);
-        ReservationResponse response = new ReservationResponse();
+        @Mock
+        private AppUserRepository appUserRepository;
 
-        when(reservationRepository.findAll()).thenReturn(List.of(reservation));
-        when(reservationMapper.toResponse(reservation)).thenReturn(response);
+        @InjectMocks
+        private ReservationService reservationService;
 
-        List<ReservationResponse> result = reservationService.getAllReservations();
+        @Test
+        void getAllReservationsReturnsMappedReservations() {
+                Reservation reservation = mock(Reservation.class);
+                ReservationResponse response = new ReservationResponse();
 
-        assertEquals(1, result.size());
-        assertSame(response, result.get(0));
+                when(reservationRepository.findByOwner_Email(EMAIL)).thenReturn(List.of(reservation));
+                when(reservationMapper.toResponse(reservation)).thenReturn(response);
 
-        verify(reservationRepository).findAll();
-        verify(reservationMapper).toResponse(reservation);
-    }
+                List<ReservationResponse> result = reservationService.getAllReservations(EMAIL);
 
-    @Test
-    void getReservationByIdReturnsMappedReservation() {
-        Long id = 1L;
-        Reservation reservation = mock(Reservation.class);
-        ReservationResponse response = new ReservationResponse();
+                assertEquals(1, result.size());
+                assertSame(response, result.get(0));
 
-        when(reservationRepository.findById(id))
-                .thenReturn(Optional.of(reservation));
-        when(reservationMapper.toResponse(reservation))
-                .thenReturn(response);
+                verify(reservationRepository).findByOwner_Email(EMAIL);
+                ;
+                verify(reservationMapper).toResponse(reservation);
+        }
 
-        ReservationResponse result = reservationService.getReservationById(id);
+        @Test
+        void getReservationByIdReturnsMappedReservation() {
+                Long id = 1L;
+                Reservation reservation = mock(Reservation.class);
+                ReservationResponse response = new ReservationResponse();
 
-        assertSame(response, result);
+                when(reservationRepository.findByIdAndOwner_Email(id, EMAIL))
+                                .thenReturn(Optional.of(reservation));
+                when(reservationMapper.toResponse(reservation))
+                                .thenReturn(response);
 
-        verify(reservationRepository).findById(id);
-        verify(reservationMapper).toResponse(reservation);
-    }
+                ReservationResponse result = reservationService.getReservationById(id, EMAIL);
 
-    @Test
-    void getReservationByIdThrowsWhenReservationNotFound() {
-        Long id = 999L;
+                assertSame(response, result);
 
-        when(reservationRepository.findById(id))
-                .thenReturn(Optional.empty());
+                verify(reservationRepository).findByIdAndOwner_Email(id, EMAIL);
+                ;
+                verify(reservationMapper).toResponse(reservation);
+        }
 
-        assertThrows(
-                ReservationNotFoundException.class,
-                () -> reservationService.getReservationById(id));
+        @Test
+        void getReservationByIdThrowsWhenReservationNotFound() {
+                Long id = 999L;
 
-        verify(reservationRepository).findById(id);
-        verifyNoInteractions(reservationMapper);
-    }
+                when(reservationRepository.findByIdAndOwner_Email(id, EMAIL))
+                                .thenReturn(Optional.empty());
 
-    @Test
-    void createReservationSavesAndReturnsMappedReservation() {
-        Long roomId = 1L;
-        LocalDateTime startAt = LocalDateTime.now().plusDays(1);
-        LocalDateTime endAt = startAt.plusHours(1);
+                assertThrows(
+                                ReservationNotFoundException.class,
+                                () -> reservationService.getReservationById(id, EMAIL));
 
-        ReservationRequest request = new ReservationRequest();
-        request.setMeetingRoomId(roomId);
-        request.setStartAt(startAt);
-        request.setEndAt(endAt);
+                verify(reservationRepository).findByIdAndOwner_Email(id, EMAIL);
+                ;
+                verifyNoInteractions(reservationMapper);
+        }
 
-        MeetingRoom meetingRoom = mock(MeetingRoom.class);
-        ReservationResponse response = new ReservationResponse();
+        @Test
+        void createReservationSavesAndReturnsMappedReservation() {
+                Long roomId = 1L;
+                LocalDateTime startAt = LocalDateTime.now().plusDays(1);
+                LocalDateTime endAt = startAt.plusHours(1);
 
-        when(meetingRoomRepository.findById(roomId))
-                .thenReturn(Optional.of(meetingRoom));
+                ReservationRequest request = new ReservationRequest();
+                request.setMeetingRoomId(roomId);
+                request.setStartAt(startAt);
+                request.setEndAt(endAt);
 
-        when(reservationRepository.save(any(Reservation.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
+                MeetingRoom meetingRoom = mock(MeetingRoom.class);
+                ReservationResponse response = new ReservationResponse();
 
-        when(reservationMapper.toResponse(any(Reservation.class)))
-                .thenReturn(response);
+                AppUser owner = new AppUser(EMAIL, "hashed-password");
 
-        ReservationResponse result = reservationService.createReservation(request);
+                when(appUserRepository.findByEmail(EMAIL))
+                                .thenReturn(Optional.of(owner));
 
-        assertSame(response, result);
+                when(meetingRoomRepository.findById(roomId))
+                                .thenReturn(Optional.of(meetingRoom));
 
-        ArgumentCaptor<Reservation> captor = ArgumentCaptor.forClass(Reservation.class);
+                when(reservationRepository.save(any(Reservation.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        verify(reservationRepository).save(captor.capture());
+                when(reservationMapper.toResponse(any(Reservation.class)))
+                                .thenReturn(response);
 
-        Reservation savedReservation = captor.getValue();
+                ReservationResponse result = reservationService.createReservation(request, EMAIL);
 
-        assertSame(meetingRoom, savedReservation.getMeetingRoom());
-        assertEquals(startAt, savedReservation.getStartAt());
-        assertEquals(endAt, savedReservation.getEndAt());
+                assertSame(response, result);
 
-        verify(reservationMapper).toResponse(savedReservation);
-    }
-
-    @Test
-    void createReservationThrowsWhenEndIsBeforeStart() {
-        LocalDateTime startAt = LocalDateTime.now().plusDays(1);
-        LocalDateTime endAt = startAt.minusHours(1);
-
-        ReservationRequest request = new ReservationRequest();
-        request.setMeetingRoomId(1L);
-        request.setStartAt(startAt);
-        request.setEndAt(endAt);
-
-        assertThrows(
-                InvalidReservationPeriodException.class,
-                () -> reservationService.createReservation(request));
-
-        verifyNoInteractions(
-                meetingRoomRepository,
-                reservationRepository,
-                reservationMapper);
-    }
-
-    @Test
-    void createReservationThrowsWhenMeetingRoomNotFound() {
-        Long roomId = 999L;
-        LocalDateTime startAt = LocalDateTime.now().plusDays(1);
-
-        ReservationRequest request = new ReservationRequest();
-        request.setMeetingRoomId(roomId);
-        request.setStartAt(startAt);
-        request.setEndAt(startAt.plusHours(1));
-
-        when(meetingRoomRepository.findById(roomId))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                MeetingRoomNotFoundException.class,
-                () -> reservationService.createReservation(request));
-
-        verify(meetingRoomRepository).findById(roomId);
-        verifyNoInteractions(reservationRepository, reservationMapper);
-    }
-
-    @Test
-    void cancelReservationUpdatesStatusAndReturnsMappedReservation() {
-        Long id = 1L;
-        LocalDateTime startAt = LocalDateTime.now().plusDays(1);
-
-        MeetingRoom meetingRoom = mock(MeetingRoom.class);
-        Reservation reservation = new Reservation(
-                meetingRoom,
-                startAt,
-                startAt.plusHours(1));
-
-        ReservationResponse response = new ReservationResponse();
-
-        when(reservationRepository.findById(id))
-                .thenReturn(Optional.of(reservation));
-
-        when(reservationRepository.save(reservation))
-                .thenReturn(reservation);
-
-        when(reservationMapper.toResponse(reservation))
-                .thenReturn(response);
-
-        assertEquals(ReservationStatus.ACTIVE, reservation.getStatus());
-
-        ReservationResponse result = reservationService.cancelReservation(id);
-
-        assertEquals(ReservationStatus.CANCELLED, reservation.getStatus());
-        assertSame(response, result);
-
-        verify(reservationRepository).findById(id);
-        verify(reservationRepository).save(reservation);
-        verify(reservationMapper).toResponse(reservation);
-    }
-
-    @Test
-    void cancelReservationThrowsWhenReservationNotFound() {
-        Long id = 999L;
-
-        when(reservationRepository.findById(id))
-                .thenReturn(Optional.empty());
-
-        assertThrows(
-                ReservationNotFoundException.class,
-                () -> reservationService.cancelReservation(id));
-
-        verify(reservationRepository).findById(id);
-        verifyNoMoreInteractions(reservationRepository);
-        verifyNoInteractions(meetingRoomRepository, reservationMapper);
-    }
-    @Test
-void createReservationThrowsWhenTimeSlotOverlaps() {
-    Long roomId = 1L;
-    LocalDateTime startAt = LocalDateTime.now().plusDays(1);
-    LocalDateTime endAt = startAt.plusHours(1);
-
-    ReservationRequest request = new ReservationRequest();
-    request.setMeetingRoomId(roomId);
-    request.setStartAt(startAt);
-    request.setEndAt(endAt);
-
-    MeetingRoom meetingRoom = mock(MeetingRoom.class);
-
-    when(meetingRoomRepository.findById(roomId))
-            .thenReturn(Optional.of(meetingRoom));
-
-    when(reservationRepository
-            .existsByMeetingRoom_IdAndStatusAndStartAtLessThanAndEndAtGreaterThan(
-                    roomId, ReservationStatus.ACTIVE, endAt, startAt
-            ))
-            .thenReturn(true);
-
-    assertThrows(
-            ReservationConflictException.class,
-            () -> reservationService.createReservation(request)
-    );
-
-    verify(reservationRepository, never()).save(any(Reservation.class));
-    verifyNoInteractions(reservationMapper);
-}
-@Test
-void createReservationChecksOnlyActiveReservations() {
-    Long roomId = 1L;
-    LocalDateTime startAt = LocalDateTime.now().plusDays(1);
-    LocalDateTime endAt = startAt.plusHours(1);
-
-    ReservationRequest request = new ReservationRequest();
-    request.setMeetingRoomId(roomId);
-    request.setStartAt(startAt);
-    request.setEndAt(endAt);
-
-    MeetingRoom meetingRoom = mock(MeetingRoom.class);
-    ReservationResponse response = new ReservationResponse();
-
-    when(meetingRoomRepository.findById(roomId))
-            .thenReturn(Optional.of(meetingRoom));
-
-    when(reservationRepository
-            .existsByMeetingRoom_IdAndStatusAndStartAtLessThanAndEndAtGreaterThan(
-                    roomId, ReservationStatus.ACTIVE, endAt, startAt
-            ))
-            .thenReturn(false);
-
-    when(reservationRepository.save(any(Reservation.class)))
-            .thenAnswer(invocation -> invocation.getArgument(0));
-
-    when(reservationMapper.toResponse(any(Reservation.class)))
-            .thenReturn(response);
-
-    ReservationResponse result = reservationService.createReservation(request);
-
-    assertSame(response, result);
-
-    verify(reservationRepository)
-            .existsByMeetingRoom_IdAndStatusAndStartAtLessThanAndEndAtGreaterThan(
-                    roomId, ReservationStatus.ACTIVE, endAt, startAt
-            );
-
-    verify(reservationRepository).save(any(Reservation.class));
-}
+                ArgumentCaptor<Reservation> captor = ArgumentCaptor.forClass(Reservation.class);
+
+                verify(reservationRepository).save(captor.capture());
+
+                Reservation savedReservation = captor.getValue();
+
+                assertSame(meetingRoom, savedReservation.getMeetingRoom());
+                assertEquals(startAt, savedReservation.getStartAt());
+                assertEquals(endAt, savedReservation.getEndAt());
+                assertSame(owner, savedReservation.getOwner());
+
+                verify(reservationMapper).toResponse(savedReservation);
+        }
+
+        @Test
+        void createReservationThrowsWhenEndIsBeforeStart() {
+                LocalDateTime startAt = LocalDateTime.now().plusDays(1);
+                LocalDateTime endAt = startAt.minusHours(1);
+
+                ReservationRequest request = new ReservationRequest();
+                request.setMeetingRoomId(1L);
+                request.setStartAt(startAt);
+                request.setEndAt(endAt);
+
+                assertThrows(
+                                InvalidReservationPeriodException.class,
+                                () -> reservationService.createReservation(request, EMAIL));
+
+                verifyNoInteractions(
+                                meetingRoomRepository,
+                                reservationRepository,
+                                reservationMapper);
+        }
+
+        @Test
+        void createReservationThrowsWhenMeetingRoomNotFound() {
+                Long roomId = 999L;
+                LocalDateTime startAt = LocalDateTime.now().plusDays(1);
+
+                ReservationRequest request = new ReservationRequest();
+                request.setMeetingRoomId(roomId);
+                request.setStartAt(startAt);
+                request.setEndAt(startAt.plusHours(1));
+
+                when(meetingRoomRepository.findById(roomId))
+                                .thenReturn(Optional.empty());
+
+                assertThrows(
+                                MeetingRoomNotFoundException.class,
+                                () -> reservationService.createReservation(request, EMAIL));
+
+                verify(meetingRoomRepository).findById(roomId);
+                verifyNoInteractions(reservationRepository, reservationMapper);
+        }
+
+        @Test
+        void cancelReservationUpdatesStatusAndReturnsMappedReservation() {
+                Long id = 1L;
+                LocalDateTime startAt = LocalDateTime.now().plusDays(1);
+
+                MeetingRoom meetingRoom = mock(MeetingRoom.class);
+                Reservation reservation = new Reservation(
+                                meetingRoom,
+                                startAt,
+                                startAt.plusHours(1));
+
+                ReservationResponse response = new ReservationResponse();
+
+                when(reservationRepository.findByIdAndOwner_Email(id, EMAIL))
+                                .thenReturn(Optional.of(reservation));
+
+                when(reservationRepository.save(reservation))
+                                .thenReturn(reservation);
+
+                when(reservationMapper.toResponse(reservation))
+                                .thenReturn(response);
+
+                assertEquals(ReservationStatus.ACTIVE, reservation.getStatus());
+
+                ReservationResponse result = reservationService.cancelReservation(id, EMAIL);
+
+                assertEquals(ReservationStatus.CANCELLED, reservation.getStatus());
+                assertSame(response, result);
+
+                verify(reservationRepository).findByIdAndOwner_Email(id, EMAIL);
+                verify(reservationRepository).save(reservation);
+                verify(reservationMapper).toResponse(reservation);
+        }
+
+        @Test
+        void cancelReservationThrowsWhenReservationNotFound() {
+                Long id = 999L;
+
+                when(reservationRepository.findByIdAndOwner_Email(id, EMAIL))
+                                .thenReturn(Optional.empty());
+
+                assertThrows(
+                                ReservationNotFoundException.class,
+                                () -> reservationService.cancelReservation(id, EMAIL));
+
+                verify(reservationRepository).findByIdAndOwner_Email(id, EMAIL);
+                verifyNoMoreInteractions(reservationRepository);
+                verifyNoInteractions(meetingRoomRepository, reservationMapper);
+        }
+
+        @Test
+        void createReservationThrowsWhenTimeSlotOverlaps() {
+                Long roomId = 1L;
+                LocalDateTime startAt = LocalDateTime.now().plusDays(1);
+                LocalDateTime endAt = startAt.plusHours(1);
+
+                ReservationRequest request = new ReservationRequest();
+                request.setMeetingRoomId(roomId);
+                request.setStartAt(startAt);
+                request.setEndAt(endAt);
+
+                MeetingRoom meetingRoom = mock(MeetingRoom.class);
+
+                when(meetingRoomRepository.findById(roomId))
+                                .thenReturn(Optional.of(meetingRoom));
+
+                when(reservationRepository
+                                .existsByMeetingRoom_IdAndStatusAndStartAtLessThanAndEndAtGreaterThan(
+                                                roomId, ReservationStatus.ACTIVE, endAt, startAt))
+                                .thenReturn(true);
+
+                assertThrows(
+                                ReservationConflictException.class,
+                                () -> reservationService.createReservation(request, EMAIL));
+
+                verify(reservationRepository, never()).save(any(Reservation.class));
+                verifyNoInteractions(reservationMapper);
+        }
+
+        @Test
+        void createReservationChecksOnlyActiveReservations() {
+                Long roomId = 1L;
+                LocalDateTime startAt = LocalDateTime.now().plusDays(1);
+                LocalDateTime endAt = startAt.plusHours(1);
+
+                ReservationRequest request = new ReservationRequest();
+                request.setMeetingRoomId(roomId);
+                request.setStartAt(startAt);
+                request.setEndAt(endAt);
+
+                MeetingRoom meetingRoom = mock(MeetingRoom.class);
+                ReservationResponse response = new ReservationResponse();
+
+                when(meetingRoomRepository.findById(roomId))
+                                .thenReturn(Optional.of(meetingRoom));
+
+                AppUser owner = new AppUser(EMAIL, "hashed-password");
+
+                when(appUserRepository.findByEmail(EMAIL))
+                                .thenReturn(Optional.of(owner));
+
+                when(reservationRepository
+                                .existsByMeetingRoom_IdAndStatusAndStartAtLessThanAndEndAtGreaterThan(
+                                                roomId, ReservationStatus.ACTIVE, endAt, startAt))
+                                .thenReturn(false);
+
+                when(reservationRepository.save(any(Reservation.class)))
+                                .thenAnswer(invocation -> invocation.getArgument(0));
+
+                when(reservationMapper.toResponse(any(Reservation.class)))
+                                .thenReturn(response);
+
+                ReservationResponse result = reservationService.createReservation(request, EMAIL);
+
+                assertSame(response, result);
+
+                verify(reservationRepository)
+                                .existsByMeetingRoom_IdAndStatusAndStartAtLessThanAndEndAtGreaterThan(
+                                                roomId, ReservationStatus.ACTIVE, endAt, startAt);
+
+                verify(reservationRepository).save(any(Reservation.class));
+        }
 }
