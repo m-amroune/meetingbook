@@ -19,4 +19,10 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
     List<Reservation> findByOwner_Email(String email);
 
     Optional<Reservation> findByIdAndOwner_Email(Long id, String email);
+
+    boolean existsByOwner_EmailAndStatusAndStartAtGreaterThanEqualAndStartAtLessThan(
+            String email,
+            ReservationStatus status,
+            LocalDateTime dayStart,
+            LocalDateTime nextDayStart);
 }

@@ -23,6 +23,9 @@ import com.mamroune.meetingbook.domain.AppUser;
 import com.mamroune.meetingbook.repository.AppUserRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
+import java.time.DayOfWeek;
+import java.time.Duration;
+import java.time.LocalTime;
 
 @Service
 public class ReservationService {
@@ -63,6 +66,47 @@ public class ReservationService {
                 if (!request.getEndAt().isAfter(request.getStartAt())) {
                         throw new InvalidReservationPeriodException();
                 }
+                var startAt = request.getStartAt();
+                var endAt = request.getEndAt();
+
+                // Reservations are allowed from Monday to Saturday.
+                if (startAt.getDayOfWeek() == DayOfWeek.SUNDAY) {
+                        throw new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "Les réservations sont interdites le dimanche");
+                }
+
+                // Reservations must start and end on the same day, between 9:00 and 19:00.
+                if (!startAt.toLocalDate().equals(endAt.toLocalDate())
+                                || startAt.toLocalTime().isBefore(LocalTime.of(9, 0))
+                                || endAt.toLocalTime().isAfter(LocalTime.of(19, 0))) {
+                        throw new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "Les réservations doivent être comprises entre 9 h et 19 h");
+                }
+
+                // Start and end times must align with 30-minute slots.
+                if (startAt.getMinute() % 30 != 0
+                                || endAt.getMinute() % 30 != 0
+                                || startAt.getSecond() != 0
+                                || endAt.getSecond() != 0
+                                || startAt.getNano() != 0
+                                || endAt.getNano() != 0) {
+                        throw new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "Les horaires doivent respecter des créneaux de 30 minutes");
+                }
+
+                // Duration must be between 1 and 3 hours, in 30-minute increments.
+                long durationMinutes = Duration.between(startAt, endAt).toMinutes();
+
+                if (durationMinutes < 60
+                                || durationMinutes > 180
+                                || durationMinutes % 30 != 0) {
+                        throw new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "La durée doit être comprise entre 1 h et 3 h, par pas de 30 minutes");
+                }
                 MeetingRoom meetingRoom = meetingRoomRepository.findById(request.getMeetingRoomId())
                                 .orElseThrow(() -> new MeetingRoomNotFoundException(request.getMeetingRoomId()));
 
@@ -76,6 +120,22 @@ public class ReservationService {
                 if (hasConflict) {
                         throw new ReservationConflictException();
                 }
+                // Allow only one active reservation per user and day.
+var dayStart = request.getStartAt().toLocalDate().atStartOfDay();
+var nextDayStart = dayStart.plusDays(1);
+
+boolean hasDailyReservation = reservationRepository
+        .existsByOwner_EmailAndStatusAndStartAtGreaterThanEqualAndStartAtLessThan(
+                email,
+                ReservationStatus.ACTIVE,
+                dayStart,
+                nextDayStart);
+
+if (hasDailyReservation) {
+    throw new ResponseStatusException(
+            HttpStatus.CONFLICT,
+            "Vous avez déjà une réservation active pour cette journée");
+}
                 AppUser owner = appUserRepository.findByEmail(email)
                                 .orElseThrow(() -> new ResponseStatusException(
                                                 HttpStatus.UNAUTHORIZED, "Utilisateur introuvable"));
