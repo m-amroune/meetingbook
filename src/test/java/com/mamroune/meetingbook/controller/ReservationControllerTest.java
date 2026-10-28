@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import org.springframework.http.MediaType;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import com.mamroune.meetingbook.domain.ReservationStatus;
 
@@ -31,10 +32,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import com.mamroune.meetingbook.exception.ReservationConflictException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import static org.mockito.ArgumentMatchers.eq;
 
 @ExtendWith(MockitoExtension.class)
 class ReservationControllerTest {
+        private static final String EMAIL = "test@example.com";
 
+        private static final Authentication TEST_USER = new UsernamePasswordAuthenticationToken(EMAIL, null, List.of());
         @Mock
         private ReservationService reservationService;
 
@@ -53,10 +59,10 @@ class ReservationControllerTest {
                 response.setId(1L);
                 response.setMeetingRoomId(2L);
 
-                when(reservationService.getAllReservations())
+                when(reservationService.getAllReservations(EMAIL))
                                 .thenReturn(List.of(response));
 
-                mockMvc.perform(get("/api/reservations"))
+                mockMvc.perform(get("/api/reservations").principal(TEST_USER))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$[0].id").value(1))
                                 .andExpect(jsonPath("$[0].meetingRoomId").value(2));
@@ -71,10 +77,11 @@ class ReservationControllerTest {
                 response.setMeetingRoomId(2L);
                 response.setMeetingRoomName("Victor Hugo");
 
-                when(reservationService.getReservationById(id))
+                when(reservationService.getReservationById(id, EMAIL))
                                 .thenReturn(response);
 
-                mockMvc.perform(get("/api/reservations/{id}", id))
+                mockMvc.perform(get("/api/reservations/{id}", id)
+                                .principal(TEST_USER))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.id").value(1))
                                 .andExpect(jsonPath("$.meetingRoomId").value(2))
@@ -85,10 +92,11 @@ class ReservationControllerTest {
         void getReservationByIdReturnsNotFoundWhenReservationDoesNotExist() throws Exception {
                 Long id = 999L;
 
-                when(reservationService.getReservationById(id))
+                when(reservationService.getReservationById(id, EMAIL))
                                 .thenThrow(new ReservationNotFoundException(id));
 
-                mockMvc.perform(get("/api/reservations/{id}", id))
+                mockMvc.perform(get("/api/reservations/{id}", id)
+                                .principal(TEST_USER))
                                 .andExpect(status().isNotFound());
         }
 
@@ -110,10 +118,11 @@ class ReservationControllerTest {
                 response.setMeetingRoomId(2L);
                 response.setMeetingRoomName("Victor Hugo");
 
-                when(reservationService.createReservation(any(ReservationRequest.class)))
+                when(reservationService.createReservation(any(ReservationRequest.class), eq(EMAIL)))
                                 .thenReturn(response);
 
                 mockMvc.perform(post("/api/reservations")
+                                .principal(TEST_USER)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isCreated())
@@ -131,10 +140,11 @@ class ReservationControllerTest {
                 response.setMeetingRoomId(2L);
                 response.setStatus(ReservationStatus.CANCELLED);
 
-                when(reservationService.cancelReservation(id))
+                when(reservationService.cancelReservation(id, EMAIL))
                                 .thenReturn(response);
 
-                mockMvc.perform(patch("/api/reservations/{id}/cancel", id))
+                mockMvc.perform(patch("/api/reservations/{id}/cancel", id)
+                                .principal(TEST_USER))
                                 .andExpect(status().isOk())
                                 .andExpect(jsonPath("$.id").value(1))
                                 .andExpect(jsonPath("$.status").value("CANCELLED"));
@@ -173,13 +183,14 @@ class ReservationControllerTest {
                                 }
                                 """.formatted(startAt, endAt);
 
-                when(reservationService.createReservation(any(ReservationRequest.class)))
+                when(reservationService.createReservation(any(ReservationRequest.class), eq(EMAIL)))
                                 .thenThrow(new ReservationConflictException());
 
                 mockMvc.perform(post("/api/reservations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(requestBody))
-                                .andExpect(status().isConflict());
+        .principal(TEST_USER)
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(requestBody))
+        .andExpect(status().isConflict());
         }
 
         @Test
@@ -196,6 +207,7 @@ class ReservationControllerTest {
                                 """.formatted(startAt, endAt);
 
                 mockMvc.perform(post("/api/reservations")
+                                .principal(TEST_USER)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(requestBody))
                                 .andExpect(status().isBadRequest());

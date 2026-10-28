@@ -19,6 +19,10 @@ import com.mamroune.meetingbook.exception.InvalidReservationPeriodException;
 
 import com.mamroune.meetingbook.domain.ReservationStatus;
 import com.mamroune.meetingbook.exception.ReservationConflictException;
+import com.mamroune.meetingbook.domain.AppUser;
+import com.mamroune.meetingbook.repository.AppUserRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class ReservationService {
@@ -26,31 +30,36 @@ public class ReservationService {
         private final ReservationRepository reservationRepository;
         private final MeetingRoomRepository meetingRoomRepository;
         private final ReservationMapper reservationMapper;
+        private final AppUserRepository appUserRepository;
 
         public ReservationService(
                         ReservationRepository reservationRepository,
                         MeetingRoomRepository meetingRoomRepository,
-                        ReservationMapper reservationMapper) {
+                        ReservationMapper reservationMapper,
+                        AppUserRepository appUserRepository) {
                 this.reservationRepository = reservationRepository;
                 this.meetingRoomRepository = meetingRoomRepository;
                 this.reservationMapper = reservationMapper;
+                this.appUserRepository = appUserRepository;
         }
 
-        public List<ReservationResponse> getAllReservations() {
-                return reservationRepository.findAll()
+        public List<ReservationResponse> getAllReservations(String email) {
+                return reservationRepository.findByOwner_Email(email)
                                 .stream()
                                 .map(reservationMapper::toResponse)
                                 .toList();
         }
 
-        public ReservationResponse getReservationById(Long id) {
-                Reservation reservation = reservationRepository.findById(id)
+        public ReservationResponse getReservationById(Long id, String email) {
+                Reservation reservation = reservationRepository
+                                .findByIdAndOwner_Email(id, email)
                                 .orElseThrow(() -> new ReservationNotFoundException(id));
 
                 return reservationMapper.toResponse(reservation);
         }
 
-        public ReservationResponse createReservation(ReservationRequest request) {
+        public ReservationResponse createReservation(
+                        ReservationRequest request, String email) {
                 if (!request.getEndAt().isAfter(request.getStartAt())) {
                         throw new InvalidReservationPeriodException();
                 }
@@ -67,19 +76,23 @@ public class ReservationService {
                 if (hasConflict) {
                         throw new ReservationConflictException();
                 }
-
+                AppUser owner = appUserRepository.findByEmail(email)
+                                .orElseThrow(() -> new ResponseStatusException(
+                                                HttpStatus.UNAUTHORIZED, "Utilisateur introuvable"));
                 Reservation reservation = new Reservation(
                                 meetingRoom,
                                 request.getStartAt(),
-                                request.getEndAt());
+                                request.getEndAt(),
+                                owner);
 
                 Reservation savedReservation = reservationRepository.save(reservation);
 
                 return reservationMapper.toResponse(savedReservation);
         }
 
-        public ReservationResponse cancelReservation(Long id) {
-                Reservation reservation = reservationRepository.findById(id)
+        public ReservationResponse cancelReservation(Long id, String email) {
+                Reservation reservation = reservationRepository
+                                .findByIdAndOwner_Email(id, email)
                                 .orElseThrow(() -> new ReservationNotFoundException(id));
 
                 reservation.cancel();
