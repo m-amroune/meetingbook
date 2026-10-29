@@ -82,4 +82,16 @@ void rejectsUnauthenticatedReservationCancellation() throws Exception {
             .with(csrf()))
             .andExpect(status().isUnauthorized());
 }
+@Test
+void rejectsRegistrationWithoutCsrfToken() throws Exception {
+    mockMvc.perform(post("/api/auth/register"))
+            .andExpect(status().isForbidden());
+}
+
+@Test
+void rejectsUnauthenticatedReservationCreation() throws Exception {
+    mockMvc.perform(post("/api/reservations")
+            .with(csrf()))
+            .andExpect(status().isUnauthorized());
+}
 }
