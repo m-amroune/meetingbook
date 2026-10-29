@@ -21,6 +21,27 @@
 
       <a routerLink="/reservations/nouvelle" routerLinkActive="is-active"> Nouvelle réservation </a>
     </nav>
+
+    <div class="sidebar-account">
+      @if (currentUser(); as user) {
+        <p class="sidebar-user">{{ user.email }}</p>
+
+        <button type="button" class="sidebar-logout" [disabled]="loggingOut()" (click)="logout()">
+          {{ loggingOut() ? 'Déconnexion...' : 'Se déconnecter' }}
+        </button>
+      } @else {
+        <div class="sidebar-actions">
+          <a routerLink="/connexion" routerLinkActive="is-active"> Se connecter </a>
+          <a routerLink="/inscription" routerLinkActive="is-active"> Créer un compte </a>
+        </div>
+      }
+
+      @if (logoutError()) {
+        <p class="sidebar-error" role="alert">
+          {{ logoutError() }}
+        </p>
+      }
+    </div>
   </aside>
 
   <main class="site-main">
