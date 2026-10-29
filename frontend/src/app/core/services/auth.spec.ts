@@ -141,4 +141,28 @@ describe('AuthService', () => {
 
     expect(completed).toBe(true);
   });
+  it('rejects registration when the CSRF cookie is missing', () => {
+  document.cookie = 'XSRF-TOKEN=; Max-Age=0; path=/';
+
+  let errorMessage: string | undefined;
+
+  service.register({
+    email: 'new@example.com',
+    password: 'password123456',
+  }).subscribe({
+    error: (error: Error) => {
+      errorMessage = error.message;
+    },
+  });
+
+  const csrf = httpMock.expectOne(`${apiUrl}/csrf`);
+
+  csrf.flush({
+    headerName: 'X-XSRF-TOKEN',
+    token: 'masked-token',
+  });
+
+  expect(errorMessage).toBe('Cookie CSRF introuvable');
+  httpMock.expectNone(`${apiUrl}/register`);
+});
 });
