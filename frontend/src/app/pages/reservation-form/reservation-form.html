@@ -1,5 +1,8 @@
 <section class="reservation-page">
   <h2>Nouvelle réservation</h2>
+  <p>
+    Réservations du lundi au samedi, de 9 h à 19 h. Durée : 1 h à 3 h, par créneaux de 30 minutes.
+  </p>
 
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div class="form-field">
@@ -29,12 +32,12 @@
 
     <div class="form-field">
       <label for="startAt">Début</label>
-      <input id="startAt" type="datetime-local" formControlName="startAt" />
+      <input id="startAt" type="datetime-local" formControlName="startAt" step="1800" />
     </div>
 
     <div class="form-field">
       <label for="endAt">Fin</label>
-      <input id="endAt" type="datetime-local" formControlName="endAt" />
+      <input id="endAt" type="datetime-local" formControlName="endAt" step="1800" />
     </div>
 
     @if (form.controls.meetingRoomId.invalid && form.controls.meetingRoomId.touched) {
@@ -60,6 +63,27 @@
     @if (form.hasError('invalidDates')) {
       <p role="alert">Les dates indiquées sont invalides.</p>
     }
+
+    @if (form.hasError('differentDay')) {
+      <p role="alert">La réservation doit commencer et se terminer le même jour.</p>
+    }
+
+    @if (form.hasError('closedDay')) {
+      <p role="alert">Les réservations sont impossibles le dimanche.</p>
+    }
+
+    @if (form.hasError('outsideHours')) {
+      <p role="alert">Les réservations doivent être comprises entre 9 h et 19 h.</p>
+    }
+
+    @if (form.hasError('invalidSlot')) {
+      <p role="alert">Les horaires doivent respecter des créneaux de 30 minutes.</p>
+    }
+
+    @if (form.hasError('invalidDuration')) {
+      <p role="alert">La durée doit être comprise entre 1 h et 3 h.</p>
+    }
+
     <button type="submit" [disabled]="submitting() || roomsLoading() || roomsError()">
       {{ submitting() ? 'Enregistrement...' : 'Confirmer la réservation' }}
     </button>

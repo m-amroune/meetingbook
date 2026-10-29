@@ -19,19 +19,51 @@ function reservationPeriodValidator(control: AbstractControl): ValidationErrors 
     return null;
   }
 
-  const start = new Date(startAt).getTime();
-  const end = new Date(endAt).getTime();
+  const start = new Date(startAt);
+  const end = new Date(endAt);
 
-  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
     return { invalidDates: true };
   }
 
-  if (start <= Date.now() || end <= Date.now()) {
+  if (start.getTime() <= Date.now()) {
     return { dateNotFuture: true };
   }
 
   if (end <= start) {
     return { invalidPeriod: true };
+  }
+
+  if (start.toDateString() !== end.toDateString()) {
+    return { differentDay: true };
+  }
+
+  if (start.getDay() === 0) {
+    return { closedDay: true };
+  }
+
+  const startMinutes = start.getHours() * 60 + start.getMinutes();
+  const endMinutes = end.getHours() * 60 + end.getMinutes();
+
+  if (startMinutes < 9 * 60 || endMinutes > 19 * 60) {
+    return { outsideHours: true };
+  }
+
+  if (
+    start.getMinutes() % 30 !== 0 ||
+    end.getMinutes() % 30 !== 0 ||
+    start.getSeconds() !== 0 ||
+    end.getSeconds() !== 0 ||
+    start.getMilliseconds() !== 0 ||
+    end.getMilliseconds() !== 0
+  ) {
+    return { invalidSlot: true };
+  }
+
+  const durationMinutes = (end.getTime() - start.getTime()) / 60_000;
+
+  if (durationMinutes < 60 || durationMinutes > 180 || durationMinutes % 30 !== 0) {
+    return { invalidDuration: true };
   }
 
   return null;
@@ -110,7 +142,9 @@ export class ReservationForm implements OnInit {
         this.submitting.set(false);
 
         if (error.status === 409) {
-          this.submissionError.set('Ce créneau est déjà réservé.');
+          this.submissionError.set(
+            'Créneau indisponible ou quota quotidien de réservation atteint.',
+          );
         } else if (error.status === 400) {
           this.submissionError.set('Les informations de réservation sont invalides.');
         } else if (error.status === 404) {

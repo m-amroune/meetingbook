@@ -10,6 +10,18 @@ import { HttpErrorResponse } from '@angular/common/http';
 describe('ReservationForm', () => {
   let component: ReservationForm;
   let fixture: ComponentFixture<ReservationForm>;
+  function futureDate(offsetFromMonday = 0): string {
+    const date = new Date();
+    const daysUntilMonday = (8 - date.getDay()) % 7 || 7;
+
+    date.setDate(date.getDate() + daysUntilMonday + offsetFromMonday);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
 
   beforeEach(async () => {
     const meetingRoomServiceMock = {
@@ -65,14 +77,7 @@ describe('ReservationForm', () => {
   });
 
   it('should reject a reservation ending before it starts', () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    const date = [
-      tomorrow.getFullYear(),
-      String(tomorrow.getMonth() + 1).padStart(2, '0'),
-      String(tomorrow.getDate()).padStart(2, '0'),
-    ].join('-');
+    const date = futureDate();
 
     component.form.patchValue({
       startAt: `${date}T15:00`,
@@ -83,57 +88,109 @@ describe('ReservationForm', () => {
     expect(component.form.invalid).toBe(true);
   });
 
-it('should confirm a successful reservation', () => {
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+  it('should confirm a successful reservation', () => {
+    const date = futureDate();
+    component.form.patchValue({
+      startAt: `${date}T10:00`,
+      endAt: `${date}T11:00`,
+    });
 
-  const date = [
-    tomorrow.getFullYear(),
-    String(tomorrow.getMonth() + 1).padStart(2, '0'),
-    String(tomorrow.getDate()).padStart(2, '0'),
-  ].join('-');
+    component.submit();
 
-  component.form.patchValue({
-    startAt: `${date}T10:00`,
-    endAt: `${date}T11:00`,
+    expect(component.submissionSuccess()).toBe(true);
+    expect(component.submitting()).toBe(false);
+    expect(component.submissionError()).toBeNull();
   });
 
-  component.submit();
+  it('should display an error when the reservation conflicts', () => {
+    const service = TestBed.inject(ReservationService);
 
-  expect(component.submissionSuccess()).toBe(true);
-  expect(component.submitting()).toBe(false);
-  expect(component.submissionError()).toBeNull();
-});
+    service.create = () => throwError(() => new HttpErrorResponse({ status: 409 }));
 
-it('should display an error when the reservation conflicts', () => {
-  const service = TestBed.inject(ReservationService);
+    const date = futureDate();
 
-  service.create = () =>
-    throwError(() => new HttpErrorResponse({ status: 409 }));
+    component.form.patchValue({
+      startAt: `${date}T10:00`,
+      endAt: `${date}T11:00`,
+    });
 
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
+    component.submit();
+    fixture.detectChanges();
 
-  const date = [
-    tomorrow.getFullYear(),
-    String(tomorrow.getMonth() + 1).padStart(2, '0'),
-    String(tomorrow.getDate()).padStart(2, '0'),
-  ].join('-');
+    const element: HTMLElement = fixture.nativeElement;
 
-  component.form.patchValue({
-    startAt: `${date}T10:00`,
-    endAt: `${date}T11:00`,
+    expect(component.submissionSuccess()).toBe(false);
+    expect(component.submitting()).toBe(false);
+    expect(element.querySelector('[role="alert"]')?.textContent).toContain(
+      'Créneau indisponible ou quota quotidien de réservation atteint.',
+    );
   });
 
-  component.submit();
-  fixture.detectChanges();
+  const invalidPeriods = [
+    {
+      name: 'Sunday',
+      start: `${futureDate(6)}T10:00`,
+      end: `${futureDate(6)}T11:00`,
+      error: 'closedDay',
+    },
+    {
+      name: 'before opening hours',
+      start: `${futureDate()}T08:00`,
+      end: `${futureDate()}T09:00`,
+      error: 'outsideHours',
+    },
+    {
+      name: 'after closing hours',
+      start: `${futureDate()}T18:00`,
+      end: `${futureDate()}T20:00`,
+      error: 'outsideHours',
+    },
+    {
+      name: 'unaligned time slots',
+      start: `${futureDate()}T10:15`,
+      end: `${futureDate()}T11:15`,
+      error: 'invalidSlot',
+    },
+    {
+      name: 'duration below one hour',
+      start: `${futureDate()}T10:00`,
+      end: `${futureDate()}T10:30`,
+      error: 'invalidDuration',
+    },
+    {
+      name: 'duration above three hours',
+      start: `${futureDate()}T10:00`,
+      end: `${futureDate()}T13:30`,
+      error: 'invalidDuration',
+    },
+    {
+      name: 'reservation spanning two days',
+      start: `${futureDate()}T18:00`,
+      end: `${futureDate(1)}T10:00`,
+      error: 'differentDay',
+    },
+  ];
 
-  const element: HTMLElement = fixture.nativeElement;
+  for (const period of invalidPeriods) {
+    it(`should reject ${period.name}`, () => {
+      component.form.patchValue({
+        startAt: period.start,
+        endAt: period.end,
+      });
 
-  expect(component.submissionSuccess()).toBe(false);
-  expect(component.submitting()).toBe(false);
-  expect(element.querySelector('[role="alert"]')?.textContent)
-    .toContain('Ce créneau est déjà réservé.');
-});
+      expect(component.form.hasError(period.error)).toBe(true);
+      expect(component.form.invalid).toBe(true);
+    });
+  }
 
+  it('should allow a Saturday reservation ending at 19:00', () => {
+    const date = futureDate(5);
+
+    component.form.patchValue({
+      startAt: `${date}T16:00`,
+      endAt: `${date}T19:00`,
+    });
+
+    expect(component.form.valid).toBe(true);
+  });
 });
