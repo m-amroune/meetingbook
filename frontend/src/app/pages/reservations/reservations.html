@@ -84,7 +84,11 @@
         <tbody>
           @for (reservation of filteredReservations(); track reservation.id) {
             <tr>
-              <td>{{ reservation.meetingRoomName }}</td>
+              <td>
+                <a class="room-detail-link" [routerLink]="['/salles', reservation.meetingRoomId]">
+                  {{ reservation.meetingRoomName }}
+                </a>
+              </td>
               <td>{{ reservation.startAt | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td>{{ reservation.endAt | date: 'dd/MM/yyyy HH:mm' }}</td>
               <td>

@@ -19,8 +19,8 @@ export class Connexion {
   readonly error = signal<string | null>(null);
 
   readonly form = this.formBuilder.nonNullable.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
+    email: ['demo@meetingbook.example', [Validators.required, Validators.email]],
+    password: ['Demo2026!', Validators.required],
   });
 
   submit(): void {

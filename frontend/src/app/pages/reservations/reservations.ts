@@ -2,10 +2,11 @@ import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ReservationService } from '../../core/services/reservation';
 import { ReservationResponse } from '../../core/models/reservation';
 import { DatePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-reservations',
-  imports: [DatePipe],
+  imports: [DatePipe, RouterLink],
   templateUrl: './reservations.html',
   styleUrl: './reservations.css',
 })

@@ -190,6 +190,25 @@ tbody tr:hover {
   outline-offset: 3px;
 }
 
+.room-detail-link {
+  color: #34445e;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: #899cb8;
+  text-underline-offset: 3px;
+}
+
+.room-detail-link:hover {
+  color: #25364d;
+  text-decoration-color: currentColor;
+}
+
+.room-detail-link:focus-visible {
+  outline: 2px solid #899cb8;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
 @media (max-width: 1100px) {
   .reservations-page .table-container,
   .reservations-page .table-container table {

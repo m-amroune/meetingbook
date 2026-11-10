@@ -4,6 +4,7 @@ import { Reservations } from './reservations';
 import { ReservationService } from '../../core/services/reservation';
 import { vi } from 'vitest';
 import { of, throwError } from 'rxjs';
+import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 
 describe('Reservations', () => {
   let component: Reservations;
@@ -27,6 +28,12 @@ describe('Reservations', () => {
     await TestBed.configureTestingModule({
       imports: [Reservations],
       providers: [
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useFactory: (router: Router) => router.routerState.root,
+          deps: [Router],
+        },
         {
           provide: ReservationService,
           useValue: reservationServiceMock,
@@ -228,4 +235,14 @@ describe('Reservations', () => {
     expect(element.textContent).toContain('Marie Curie');
     expect(resetButton.disabled).toBe(true);
   });
+  it('should link the reserved room to its detail page', () => {
+    const element: HTMLElement = fixture.nativeElement;
+
+    const link = element.querySelector<HTMLAnchorElement>('.room-detail-link');
+
+    expect(link).not.toBeNull();
+    expect(link?.textContent?.trim()).toBe('Simone Veil');
+    expect(link?.getAttribute('href')).toBe('/salles/2');
+  });
+  
 });
