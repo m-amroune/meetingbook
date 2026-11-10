@@ -27,6 +27,9 @@ import java.time.DayOfWeek;
 import java.time.Duration;
 import java.time.LocalTime;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+
 @Service
 public class ReservationService {
 
@@ -65,6 +68,20 @@ public class ReservationService {
                         ReservationRequest request, String email) {
                 if (!request.getEndAt().isAfter(request.getStartAt())) {
                         throw new InvalidReservationPeriodException();
+                }
+                if (!request.getEndAt().isAfter(request.getStartAt())) {
+                        throw new InvalidReservationPeriodException();
+                }
+
+                // Reservations cannot be made more than six months in advance.
+                LocalDate maxReservationDate = LocalDate
+                                .now(ZoneId.of("Europe/Paris"))
+                                .plusMonths(6);
+
+                if (request.getStartAt().toLocalDate().isAfter(maxReservationDate)) {
+                        throw new ResponseStatusException(
+                                        HttpStatus.BAD_REQUEST,
+                                        "Vous pouvez réserver jusqu'à six mois à l'avance");
                 }
                 var startAt = request.getStartAt();
                 var endAt = request.getEndAt();
@@ -121,21 +138,21 @@ public class ReservationService {
                         throw new ReservationConflictException();
                 }
                 // Allow only one active reservation per user and day.
-var dayStart = request.getStartAt().toLocalDate().atStartOfDay();
-var nextDayStart = dayStart.plusDays(1);
+                var dayStart = request.getStartAt().toLocalDate().atStartOfDay();
+                var nextDayStart = dayStart.plusDays(1);
 
-boolean hasDailyReservation = reservationRepository
-        .existsByOwner_EmailAndStatusAndStartAtGreaterThanEqualAndStartAtLessThan(
-                email,
-                ReservationStatus.ACTIVE,
-                dayStart,
-                nextDayStart);
+                boolean hasDailyReservation = reservationRepository
+                                .existsByOwner_EmailAndStatusAndStartAtGreaterThanEqualAndStartAtLessThan(
+                                                email,
+                                                ReservationStatus.ACTIVE,
+                                                dayStart,
+                                                nextDayStart);
 
-if (hasDailyReservation) {
-    throw new ResponseStatusException(
-            HttpStatus.CONFLICT,
-            "Vous avez déjà une réservation active pour cette journée");
-}
+                if (hasDailyReservation) {
+                        throw new ResponseStatusException(
+                                        HttpStatus.CONFLICT,
+                                        "Vous avez déjà une réservation active pour cette journée");
+                }
                 AppUser owner = appUserRepository.findByEmail(email)
                                 .orElseThrow(() -> new ResponseStatusException(
                                                 HttpStatus.UNAUTHORIZED, "Utilisateur introuvable"));

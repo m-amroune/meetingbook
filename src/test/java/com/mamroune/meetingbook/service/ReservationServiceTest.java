@@ -39,6 +39,9 @@ import java.time.temporal.TemporalAdjusters;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+
 @ExtendWith(MockitoExtension.class)
 
 class ReservationServiceTest {
@@ -484,4 +487,28 @@ class ReservationServiceTest {
 
                 verify(reservationRepository).save(any(Reservation.class));
         }
+        @Test
+void createReservationRejectsDateBeyondSixMonths() {
+    LocalDateTime startAt = LocalDate
+            .now(ZoneId.of("Europe/Paris"))
+            .plusMonths(6)
+            .plusDays(1)
+            .atTime(10, 0);
+
+    ReservationRequest request = requestFor(
+            startAt,
+            startAt.plusHours(1));
+
+    ResponseStatusException exception = assertThrows(
+            ResponseStatusException.class,
+            () -> reservationService.createReservation(request, EMAIL));
+
+    assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+
+    verifyNoInteractions(
+            meetingRoomRepository,
+            reservationRepository,
+            appUserRepository,
+            reservationMapper);
+}
 }

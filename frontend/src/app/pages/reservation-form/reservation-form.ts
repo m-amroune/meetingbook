@@ -11,6 +11,23 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ReservationService } from '../../core/services/reservation';
 import { ActivatedRoute } from '@angular/router';
 
+function getMaxReservationDate(): string {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 6;
+
+  const lastDay = new Date(year, month + 1, 0).getDate();
+  const day = Math.min(today.getDate(), lastDay);
+
+  const maxDate = new Date(year, month, day);
+
+  return [
+    maxDate.getFullYear(),
+    String(maxDate.getMonth() + 1).padStart(2, '0'),
+    String(maxDate.getDate()).padStart(2, '0'),
+  ].join('-');
+}
+
 function reservationPeriodValidator(control: AbstractControl): ValidationErrors | null {
   const startAt = control.get('startAt')?.value;
   const endAt = control.get('endAt')?.value;
@@ -29,6 +46,10 @@ function reservationPeriodValidator(control: AbstractControl): ValidationErrors 
   if (start.getTime() <= Date.now()) {
     return { dateNotFuture: true };
   }
+
+  if (startAt.slice(0, 10) > getMaxReservationDate()) {
+  return { dateTooFar: true };
+}
 
   if (end <= start) {
     return { invalidPeriod: true };
@@ -89,6 +110,8 @@ export class ReservationForm implements OnInit {
   readonly roomsLoading = signal(true);
   readonly roomsError = signal(false);
 
+  readonly maxReservationDate = getMaxReservationDate();
+
   readonly form = this.formBuilder.nonNullable.group(
     {
       meetingRoomId: [0, [Validators.required, Validators.min(1)]],
@@ -97,6 +120,57 @@ export class ReservationForm implements OnInit {
     },
     { validators: reservationPeriodValidator },
   );
+
+readonly reservationDate = this.formBuilder.nonNullable.control('');
+readonly startTime = this.formBuilder.nonNullable.control('');
+readonly endTime = this.formBuilder.nonNullable.control('');
+
+// Start times: 09:00 to 18:00, every 30 minutes.
+readonly startTimeOptions = Array.from({ length: 19 }, (_, index) => {
+  const minutes = 9 * 60 + index * 30;
+  return this.formatTime(minutes);
+});
+
+// End times depend on the selected start time.
+get endTimeOptions(): string[] {
+  const start = this.startTime.value;
+
+  if (!start) {
+    return [];
+  }
+
+  const [hours, minutes] = start.split(':').map(Number);
+  const startMinutes = hours * 60 + minutes;
+
+  return [60, 90, 120, 150, 180]
+    .map((duration) => startMinutes + duration)
+    .filter((endMinutes) => endMinutes <= 19 * 60)
+    .map((endMinutes) => this.formatTime(endMinutes));
+}
+
+private formatTime(minutes: number): string {
+  const hours = Math.floor(minutes / 60);
+  const remainder = minutes % 60;
+
+  return `${String(hours).padStart(2, '0')}:${String(remainder).padStart(2, '0')}`;
+}
+
+updateDateTime(): void {
+  const date = this.reservationDate.value;
+  const start = this.startTime.value;
+  const end = this.endTime.value;
+
+  this.form.patchValue({
+    startAt: date && start ? `${date}T${start}` : '',
+    endAt: date && end ? `${date}T${end}` : '',
+  });
+}
+
+updateStartTime(): void {
+  this.endTime.setValue('');
+  this.updateDateTime();
+}
+
 
   ngOnInit(): void {
     this.meetingRoomService.getAll().subscribe({

@@ -129,6 +129,27 @@
 [role='alert'] {
   color: #a12c35;
 }
+.booking-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 24px;
+  padding: 12px 20px;
+  border-radius: 6px;
+  background: #34445e;
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.booking-link:hover {
+  background: #25364d;
+}
+
+.booking-link:focus-visible {
+  outline: 2px solid #899cb8;
+  outline-offset: 3px;
+}
 
 @media (max-width: 600px) {
   .room-detail {

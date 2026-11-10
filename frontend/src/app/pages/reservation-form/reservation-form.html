@@ -1,8 +1,5 @@
 <section class="reservation-page">
   <h2>Nouvelle réservation</h2>
-  <p>
-    Réservations du lundi au samedi, de 9 h à 19 h. Durée : 1 h à 3 h, par créneaux de 30 minutes.
-  </p>
 
   <form [formGroup]="form" (ngSubmit)="submit()">
     <div class="form-field">
@@ -31,13 +28,42 @@
     </div>
 
     <div class="form-field">
-      <label for="startAt">Début</label>
-      <input id="startAt" type="datetime-local" formControlName="startAt" step="1800" />
+      <label for="reservationDate">Date de réservation</label>
+      <input
+        id="reservationDate"
+        type="date"
+        [formControl]="reservationDate"
+        [max]="maxReservationDate"
+        (change)="updateDateTime()"
+        required
+      />
     </div>
 
-    <div class="form-field">
-      <label for="endAt">Fin</label>
-      <input id="endAt" type="datetime-local" formControlName="endAt" step="1800" />
+    <div class="booking-time-grid">
+      <div class="form-field">
+        <label for="startTime">Heure de début</label>
+        <select id="startTime" [formControl]="startTime" (change)="updateStartTime()">
+          <option value="">Choisir une heure</option>
+          @for (time of startTimeOptions; track time) {
+            <option [value]="time">{{ time }}</option>
+          }
+        </select>
+      </div>
+
+      <div class="form-field">
+        <label for="endTime">Heure de fin</label>
+        <select
+          id="endTime"
+          [formControl]="endTime"
+          (change)="updateDateTime()"
+          [disabled]="!startTime.value"
+        >
+          <option value="">Choisir une heure</option>
+          @for (time of endTimeOptions; track time) {
+            <option [value]="time">{{ time }}</option>
+          }
+        </select>
+      </div>
     </div>
 
     @if (form.controls.meetingRoomId.invalid && form.controls.meetingRoomId.touched) {
@@ -45,15 +71,18 @@
     }
 
     @if (form.controls.startAt.invalid && form.controls.startAt.touched) {
-      <p role="alert">Indiquez une date et une heure de début.</p>
+      <p role="alert">Sélectionnez une date et une heure de début.</p>
     }
 
     @if (form.controls.endAt.invalid && form.controls.endAt.touched) {
-      <p role="alert">Indiquez une date et une heure de fin.</p>
+      <p role="alert">Sélectionnez une heure de fin.</p>
     }
 
     @if (form.hasError('dateNotFuture')) {
       <p role="alert">La réservation doit être dans le futur.</p>
+    }
+    @if (form.hasError('dateTooFar')) {
+      <p role="alert">Vous pouvez réserver jusqu'à six mois à l'avance.</p>
     }
 
     @if (form.hasError('invalidPeriod')) {
@@ -87,6 +116,13 @@
     <button type="submit" [disabled]="submitting() || roomsLoading() || roomsError()">
       {{ submitting() ? 'Enregistrement...' : 'Confirmer la réservation' }}
     </button>
+    <div class="reservation-conditions">
+      <h3>Conditions de réservation</h3>
+      <p>
+        Réservations du lundi au samedi, de 9 h à 19 h. Chaque réservation doit durer entre 1 h et 3
+        h. Une seule réservation est autorisée par jour. Vous pouvez réserver jusqu'à six mois à l'avance.
+      </p>
+    </div>
   </form>
   @if (submissionSuccess()) {
     <p role="status">Réservation enregistrée avec succès.</p>

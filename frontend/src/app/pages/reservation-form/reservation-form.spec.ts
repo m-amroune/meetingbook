@@ -193,4 +193,43 @@ describe('ReservationForm', () => {
 
     expect(component.form.valid).toBe(true);
   });
+
+  it('should offer start times from 09:00 to 18:00', () => {
+    expect(component.startTimeOptions.length).toBe(19);
+    expect(component.startTimeOptions[0]).toBe('09:00');
+    expect(component.startTimeOptions.at(-1)).toBe('18:00');
+  });
+
+  it('should limit end times according to the selected start', () => {
+    component.startTime.setValue('18:00');
+
+    expect(component.endTimeOptions).toEqual(['19:00']);
+  });
+
+  it('should update reservation dates from the selected fields', () => {
+    const date = futureDate();
+
+    component.reservationDate.setValue(date);
+    component.startTime.setValue('10:00');
+    component.endTime.setValue('11:30');
+
+    component.updateDateTime();
+
+    expect(component.form.controls.startAt.value).toBe(`${date}T10:00`);
+
+    expect(component.form.controls.endAt.value).toBe(`${date}T11:30`);
+
+    expect(component.form.valid).toBe(true);
+  });
+  it('should reject a reservation more than six months ahead', () => {
+    const date = futureDate(210);
+
+    component.form.patchValue({
+      startAt: `${date}T10:00`,
+      endAt: `${date}T11:00`,
+    });
+
+    expect(component.form.hasError('dateTooFar')).toBe(true);
+    expect(component.form.invalid).toBe(true);
+  });
 });
