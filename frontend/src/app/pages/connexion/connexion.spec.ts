@@ -1,4 +1,3 @@
-
 import { TestBed } from '@angular/core/testing';
 import { HttpErrorResponse } from '@angular/common/http';
 import { provideRouter, Router } from '@angular/router';
@@ -18,16 +17,15 @@ describe('Connexion', () => {
 
     TestBed.configureTestingModule({
       imports: [Connexion],
-      providers: [
-        provideRouter([]),
-        { provide: AuthService, useValue: authServiceMock },
-      ],
+      providers: [provideRouter([]), { provide: AuthService, useValue: authServiceMock }],
     });
   });
 
   it('does not submit an invalid form', () => {
     const fixture = TestBed.createComponent(Connexion);
     fixture.detectChanges();
+
+    fixture.componentInstance.form.controls.email.setValue('');
 
     fixture.componentInstance.submit();
 
@@ -36,8 +34,7 @@ describe('Connexion', () => {
 
   it('redirects to reservations after successful login', () => {
     const router = TestBed.inject(Router);
-    const navigateSpy = vi.spyOn(router, 'navigateByUrl')
-      .mockResolvedValue(true);
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
 
     authServiceMock.login.mockReturnValue(of(void 0));
 
@@ -51,18 +48,13 @@ describe('Connexion', () => {
 
     fixture.componentInstance.submit();
 
-    expect(authServiceMock.login).toHaveBeenCalledWith(
-      'test@example.com',
-      'password123456',
-    );
+    expect(authServiceMock.login).toHaveBeenCalledWith('test@example.com', 'password123456');
 
     expect(navigateSpy).toHaveBeenCalledWith('/reservations');
   });
 
   it('displays an error when credentials are incorrect', () => {
-    authServiceMock.login.mockReturnValue(
-      throwError(() => new HttpErrorResponse({ status: 401 })),
-    );
+    authServiceMock.login.mockReturnValue(throwError(() => new HttpErrorResponse({ status: 401 })));
 
     const fixture = TestBed.createComponent(Connexion);
     fixture.detectChanges();
@@ -74,7 +66,6 @@ describe('Connexion', () => {
 
     fixture.componentInstance.submit();
 
-    expect(fixture.componentInstance.error())
-      .toBe('Email ou mot de passe incorrect.');
+    expect(fixture.componentInstance.error()).toBe('Email ou mot de passe incorrect.');
   });
 });
