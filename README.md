@@ -19,17 +19,13 @@ The project focuses on full-stack development, REST API design, database managem
 
 ## Features
 
-- Meeting room listing and detail pages
-- Room information including capacity, location, equipment and availability status
-- Meeting room CRUD operations through the REST API
-- Reservation creation with date and time validation
-- Prevention of overlapping reservations
-- Reservation listing with room names, dates and status
-- Filtering by reservation status and meeting room
-- Combined filters and one-click reset
-- Reservation cancellation with confirmation
-- Loading, error and empty states
-- Responsive interface with sidebar navigation
+- Meeting room listing with capacity, location and equipment
+- User registration, login and authentication
+- Reservations from Monday to Saturday, 9 AM to 7 PM
+- Booking durations of 1 to 3 hours, in 30-minute increments
+- Prevention of overlapping bookings
+- Reservation filtering and cancellation
+- Responsive Angular interface
 
 ---
 
@@ -78,7 +74,7 @@ The project focuses on full-stack development, REST API design, database managem
 
 ## API
 
-The Spring Boot backend exposes two main REST resources.
+The Spring Boot backend exposes REST endpoints for meeting rooms, reservations and authentication.
 
 ### Meeting Rooms
 
@@ -206,9 +202,12 @@ GitHub Actions automatically provides a temporary PostgreSQL service for CI.
 
 ## Deployment
 
-- **Backend:** Docker container hosted on Render
-- **Database:** PostgreSQL hosted on Supabase
-- **Continuous Integration:** GitHub Actions
+**Live demo:** https://meetingbook-m-a.vercel.app
 
-The Angular frontend is configured to communicate with the deployed backend in production.
+- Frontend: Vercel
+- Backend: Render
+- Database: Supabase (PostgreSQL)
+- CI: GitHub Actions
+
+A demo account is available with prefilled login credentials.
 
