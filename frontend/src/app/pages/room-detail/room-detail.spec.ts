@@ -1,10 +1,5 @@
-
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import {
-  ActivatedRoute,
-  convertToParamMap,
-  provideRouter,
-} from '@angular/router';
+import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/router';
 import { of, throwError } from 'rxjs';
 
 import { MeetingRoomService } from '../../core/services/meeting-room';
@@ -61,22 +56,41 @@ describe('RoomDetail', () => {
     expect(element.textContent).toContain('Tableau blanc');
   });
 
-it('should display an error when the room does not exist', async () => {
-  const service = TestBed.inject(MeetingRoomService);
+  it('should display the correct image regardless of the room ID', async () => {
+    const service = TestBed.inject(MeetingRoomService);
 
-  service.getById = () =>
-    throwError(() => new HttpErrorResponse({ status: 404 }));
+    service.getById = () =>
+      of({
+        id: 42,
+        name: 'Joséphine Baker',
+        location: 'Étage 2',
+        capacity: 16,
+        equipment: ['Écran', 'Tableau blanc', 'Visioconférence'],
+        status: 'ACTIVE' as const,
+      });
 
-  const errorFixture = TestBed.createComponent(RoomDetail);
-  errorFixture.detectChanges();
-  await errorFixture.whenStable();
+    const detailFixture = TestBed.createComponent(RoomDetail);
+    detailFixture.detectChanges();
+    await detailFixture.whenStable();
 
-  const element: HTMLElement = errorFixture.nativeElement;
-  const alert = element.querySelector('[role="alert"]');
+    const element: HTMLElement = detailFixture.nativeElement;
+    const image = element.querySelector('.room-info__media img');
 
-  expect(alert?.textContent).toContain(
-    'Impossible de charger la salle.'
-  );
-});
+    expect(image?.getAttribute('src')).toBe('/images/josephine-baker.png');
+  });
 
+  it('should display an error when the room does not exist', async () => {
+    const service = TestBed.inject(MeetingRoomService);
+
+    service.getById = () => throwError(() => new HttpErrorResponse({ status: 404 }));
+
+    const errorFixture = TestBed.createComponent(RoomDetail);
+    errorFixture.detectChanges();
+    await errorFixture.whenStable();
+
+    const element: HTMLElement = errorFixture.nativeElement;
+    const alert = element.querySelector('[role="alert"]');
+
+    expect(alert?.textContent).toContain('Impossible de charger la salle.');
+  });
 });
