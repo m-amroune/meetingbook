@@ -1,12 +1,8 @@
-
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { Observable, of, throwError } from 'rxjs';
 
-import {
-  MeetingRoomService,
-  type MeetingRoom,
-} from '../../core/services/meeting-room';
+import { MeetingRoomService, type MeetingRoom } from '../../core/services/meeting-room';
 import { Rooms } from './rooms';
 
 describe('Rooms', () => {
@@ -57,6 +53,24 @@ describe('Rooms', () => {
     expect(element.textContent).toContain('Étage 1');
   });
 
+  it('should display the correct image regardless of the room ID', async () => {
+    apiResponse = of([
+      {
+        id: 42,
+        name: 'Joséphine Baker',
+        location: 'Étage 2',
+        capacity: 16,
+        equipment: ['Écran', 'Tableau blanc', 'Visioconférence'],
+        status: 'ACTIVE',
+      },
+    ]);
+
+    const element = await renderComponent();
+    const image = element.querySelector('.room-card__media img');
+
+    expect(image?.getAttribute('src')).toBe('/images/josephine-baker-thumb.png');
+  });
+
   it('should display an error when loading rooms fails', async () => {
     apiResponse = throwError(() => new Error('API unavailable'));
 
@@ -64,11 +78,7 @@ describe('Rooms', () => {
     const alert = element.querySelector('[role="alert"]');
 
     expect(alert).not.toBeNull();
-    expect(alert?.textContent).toContain(
-      'Impossible de charger les salles.'
-    );
+    expect(alert?.textContent).toContain('Impossible de charger les salles.');
     expect(element.textContent).not.toContain('Simone Veil');
   });
 });
-
-

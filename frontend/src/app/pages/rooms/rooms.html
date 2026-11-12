@@ -14,17 +14,17 @@
       @for (room of rooms(); track room.id) {
         <article class="room-card">
           <div class="room-card__media">
-            @switch (room.id) {
-              @case (2) {
+            @switch (room.name) {
+              @case ('Simone Veil') {
                 <img src="/images/simone-veil-thumb.png" alt="Salle Simone Veil" />
               }
-              @case (3) {
+              @case ('Marie Curie') {
                 <img src="/images/marie-curie-thumb.png" alt="Salle Marie Curie" />
               }
-              @case (4) {
+              @case ('Victor Hugo') {
                 <img src="/images/victor-hugo-thumb.png" alt="Salle Victor Hugo" />
               }
-              @case (5) {
+              @case ('Joséphine Baker') {
                 <img src="/images/josephine-baker-thumb.png" alt="Salle Joséphine Baker" />
               }
             }
