@@ -8,7 +8,7 @@ import {
   RouterLinkActive,
   RouterOutlet,
 } from '@angular/router';
-import { catchError, filter, of, startWith, switchMap } from 'rxjs';
+import { catchError, exhaustMap, filter, of, startWith, switchMap } from 'rxjs';
 
 import { AuthService, AuthUser } from './core/services/auth';
 
@@ -27,21 +27,39 @@ export class App {
   readonly loggingOut = signal(false);
   readonly logoutError = signal<string | null>(null);
 
-  constructor() {
-    // Refresh the session state after each navigation.
-    this.router.events
-      .pipe(
-        filter((event) => event instanceof NavigationEnd),
-        startWith(null),
-        switchMap(() =>
-          this.authService.getCurrentUser().pipe(
-            catchError(() => of(null)),
-          ),
+constructor() {
+  let demoLoginAttempted = false;
+
+  this.router.events
+    .pipe(
+      filter((event) => event instanceof NavigationEnd),
+      startWith(null),
+      exhaustMap(() =>
+        this.authService.getCurrentUser().pipe(
+          catchError(() => {
+            const isAuthPage =
+              window.location.pathname.startsWith('/connexion') ||
+              window.location.pathname.startsWith('/inscription');
+
+            if (demoLoginAttempted || isAuthPage) {
+              return of(null);
+            }
+
+            demoLoginAttempted = true;
+
+            return this.authService
+              .login('demo@meetingbook.example', 'Demo2026!')
+              .pipe(
+                switchMap(() => this.authService.getCurrentUser()),
+                catchError(() => of(null)),
+              );
+          }),
         ),
-        takeUntilDestroyed(),
-      )
-      .subscribe((user) => this.currentUser.set(user));
-  }
+      ),
+      takeUntilDestroyed(),
+    )
+    .subscribe((user) => this.currentUser.set(user));
+}
 
   logout(): void {
     if (this.loggingOut()) {
