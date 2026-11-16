@@ -5,6 +5,7 @@ import {
   type MeetingRoom,
 } from '../../core/services/meeting-room';
 import { RouterLink } from '@angular/router';
+import { App } from '../../app';
 
 @Component({
   selector: 'app-rooms',
@@ -14,6 +15,7 @@ import { RouterLink } from '@angular/router';
 })
 export class Rooms implements OnInit {
   private readonly meetingRoomService = inject(MeetingRoomService);
+  readonly app = inject(App, { optional: true });
 
   readonly rooms = signal<MeetingRoom[]>([]);
   readonly loading = signal(true);

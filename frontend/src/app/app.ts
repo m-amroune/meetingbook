@@ -1,13 +1,6 @@
-
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import {
-  NavigationEnd,
-  Router,
-  RouterLink,
-  RouterLinkActive,
-  RouterOutlet,
-} from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { catchError, exhaustMap, filter, of, startWith, switchMap } from 'rxjs';
 
 import { AuthService, AuthUser } from './core/services/auth';
@@ -27,39 +20,37 @@ export class App {
   readonly loggingOut = signal(false);
   readonly logoutError = signal<string | null>(null);
 
-constructor() {
-  let demoLoginAttempted = false;
+  constructor() {
+    let demoLoginAttempted = false;
 
-  this.router.events
-    .pipe(
-      filter((event) => event instanceof NavigationEnd),
-      startWith(null),
-      exhaustMap(() =>
-        this.authService.getCurrentUser().pipe(
-          catchError(() => {
-            const isAuthPage =
-              window.location.pathname.startsWith('/connexion') ||
-              window.location.pathname.startsWith('/inscription');
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        startWith(null),
+        exhaustMap(() =>
+          this.authService.getCurrentUser().pipe(
+            catchError(() => {
+              const isAuthPage =
+                window.location.pathname.startsWith('/connexion') ||
+                window.location.pathname.startsWith('/inscription');
 
-            if (demoLoginAttempted || isAuthPage) {
-              return of(null);
-            }
+              if (demoLoginAttempted || isAuthPage) {
+                return of(null);
+              }
 
-            demoLoginAttempted = true;
+              demoLoginAttempted = true;
 
-            return this.authService
-              .login('demo@meetingbook.example', 'Demo2026!')
-              .pipe(
+              return this.authService.login('demo@meetingbook.example', 'Demo2026!').pipe(
                 switchMap(() => this.authService.getCurrentUser()),
                 catchError(() => of(null)),
               );
-          }),
+            }),
+          ),
         ),
-      ),
-      takeUntilDestroyed(),
-    )
-    .subscribe((user) => this.currentUser.set(user));
-}
+        takeUntilDestroyed(),
+      )
+      .subscribe((user) => this.currentUser.set(user));
+  }
 
   logout(): void {
     if (this.loggingOut()) {
@@ -77,9 +68,7 @@ constructor() {
       },
       error: () => {
         this.loggingOut.set(false);
-        this.logoutError.set(
-          'Impossible de se déconnecter. Veuillez réessayer.',
-        );
+        this.logoutError.set('Impossible de se déconnecter. Veuillez réessayer.');
       },
     });
   }
