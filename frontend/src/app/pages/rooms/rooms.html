@@ -1,7 +1,31 @@
 <section class="rooms-page">
-  <header>
-    <h2>Salles de réunion</h2>
+  <header class="rooms-intro">
+    <div class="rooms-intro__description">
+      <p class="rooms-intro__eyebrow">MEETINGBOOK</p>
+
+      <h1>Réservation de salles de réunion</h1>
+
+      <p class="rooms-intro__text">
+        Consultez les salles, leurs équipements et leur capacité. Réservez ensuite le créneau qui
+        vous convient.
+      </p>
+    </div>
+    @if (app?.currentUser()?.email === 'demo@meetingbook.example') {
+      <aside class="rooms-intro__demo" aria-label="Compte de démonstration">
+        <p class="rooms-intro__demo-label">COMPTE DE DÉMONSTRATION</p>
+
+        <h2>Vous êtes connecté avec le compte démo</h2>
+
+        <p>Explorez les salles et essayez les fonctionnalités de réservation.</p>
+
+        <button type="button" [disabled]="app?.loggingOut()" (click)="app?.logout()">
+          {{ app?.loggingOut() ? 'Déconnexion...' : 'Utiliser un compte personnel' }}
+        </button>
+      </aside>
+    }
   </header>
+
+  <h2 class="rooms-heading">Salles disponibles</h2>
 
   @if (loading()) {
     <p role="status">Chargement des salles...</p>
@@ -16,16 +40,16 @@
           <div class="room-card__media">
             @switch (room.name) {
               @case ('Simone Veil') {
-                <img src="/images/simone-veil-thumb.png" alt="Salle Simone Veil" />
+                <img src="/images/simone-veil.png" alt="Salle Simone Veil" />
               }
               @case ('Marie Curie') {
-                <img src="/images/marie-curie-thumb.png" alt="Salle Marie Curie" />
+                <img src="/images/marie-curie.png" alt="Salle Marie Curie" />
               }
               @case ('Victor Hugo') {
-                <img src="/images/victor-hugo-thumb.png" alt="Salle Victor Hugo" />
+                <img src="/images/victor-hugo.png" alt="Salle Victor Hugo" />
               }
               @case ('Joséphine Baker') {
-                <img src="/images/josephine-baker-thumb.png" alt="Salle Joséphine Baker" />
+                <img src="/images/josephine-baker.png" alt="Salle Joséphine Baker" />
               }
             }
           </div>
@@ -50,6 +74,7 @@
           @if (room.status === 'OUT_OF_SERVICE') {
             <p class="room-card__unavailable">Hors service</p>
           }
+          <a class="room-card__link" [routerLink]="['/salles', room.id]"> Voir la salle </a>
         </article>
       }
     </div>

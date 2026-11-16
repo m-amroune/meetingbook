@@ -19,9 +19,28 @@ export class Connexion {
   readonly error = signal<string | null>(null);
 
   readonly form = this.formBuilder.nonNullable.group({
-    email: ['demo@meetingbook.example', [Validators.required, Validators.email]],
-    password: ['Demo2026!', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', Validators.required],
   });
+  loginDemo(): void {
+    if (this.submitting()) {
+      return;
+    }
+
+    this.submitting.set(true);
+    this.error.set(null);
+
+    this.authService.login('demo@meetingbook.example', 'Demo2026!').subscribe({
+      next: () => {
+        this.submitting.set(false);
+        void this.router.navigateByUrl('/salles');
+      },
+      error: () => {
+        this.submitting.set(false);
+        this.error.set('Impossible de se connecter au compte démo. Veuillez réessayer.');
+      },
+    });
+  }
 
   submit(): void {
     this.form.markAllAsTouched();

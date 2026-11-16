@@ -68,4 +68,25 @@ describe('Connexion', () => {
 
     expect(fixture.componentInstance.error()).toBe('Email ou mot de passe incorrect.');
   });
+  it('starts with empty credentials for personal login', () => {
+    const fixture = TestBed.createComponent(Connexion);
+
+    expect(fixture.componentInstance.form.getRawValue()).toEqual({
+      email: '',
+      password: '',
+    });
+  });
+  it('logs into the demo account without entering credentials', () => {
+    const router = TestBed.inject(Router);
+    const navigateSpy = vi.spyOn(router, 'navigateByUrl').mockResolvedValue(true);
+
+    authServiceMock.login.mockReturnValue(of(void 0));
+
+    const fixture = TestBed.createComponent(Connexion);
+
+    fixture.componentInstance.loginDemo();
+
+    expect(authServiceMock.login).toHaveBeenCalledWith('demo@meetingbook.example', 'Demo2026!');
+    expect(navigateSpy).toHaveBeenCalledWith('/salles');
+  });
 });

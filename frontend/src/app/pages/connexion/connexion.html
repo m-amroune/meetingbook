@@ -8,13 +8,7 @@
     <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
       <div class="form-field">
         <label for="email">Adresse email</label>
-        <input
-          id="email"
-          type="email"
-          formControlName="email"
-          autocomplete="email"
-          required
-        />
+        <input id="email" type="email" formControlName="email" autocomplete="email" required />
 
         @if (form.controls.email.touched && form.controls.email.invalid) {
           <p class="field-error">
@@ -38,9 +32,7 @@
         />
 
         @if (form.controls.password.touched && form.controls.password.invalid) {
-          <p class="field-error">
-            Le mot de passe est obligatoire.
-          </p>
+          <p class="field-error">Le mot de passe est obligatoire.</p>
         }
       </div>
 
@@ -52,6 +44,9 @@
         {{ submitting() ? 'Connexion...' : 'Se connecter' }}
       </button>
     </form>
+    <button type="button" class="auth-demo-button" [disabled]="submitting()" (click)="loginDemo()">
+      Retourner au compte démo
+    </button>
 
     <p class="auth-footer">
       Pas encore de compte ?

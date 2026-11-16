@@ -68,7 +68,7 @@ describe('Rooms', () => {
     const element = await renderComponent();
     const image = element.querySelector('.room-card__media img');
 
-    expect(image?.getAttribute('src')).toBe('/images/josephine-baker-thumb.png');
+    expect(image?.getAttribute('src')).toBe('/images/josephine-baker.png');
   });
 
   it('should display an error when loading rooms fails', async () => {

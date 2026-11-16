@@ -118,3 +118,35 @@
     padding: 32px 16px;
   }
 }
+
+.auth-demo-button {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 12px 18px;
+  border: 1px solid #899cb8;
+  border-radius: 6px;
+  background: #fff;
+  color: #34445e;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.auth-demo-button:hover:not(:disabled) {
+  background: #e8eef5;
+  border-color: #657d9b;
+}
+
+.auth-demo-button:focus-visible {
+  outline: 2px solid #34445e;
+  outline-offset: 3px;
+}
+
+.auth-demo-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
